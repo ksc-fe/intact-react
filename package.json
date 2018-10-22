@@ -2,9 +2,18 @@
   "name": "intact-react",
   "version": "1.0.0",
   "description": "A compatibility layer for running intact component in react v16",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test:dev": "node ./node_modules/karma/bin/karma start karma.config.js",
+    "test:cli": "KARMA_ENV=cli node ./node_modules/karma/bin/karma start karma.config.js",
+    "build:node": "webpack --mode=production --output-library-target=commonjs2 --output-filename=index.js",
+    "build:fe": "webpack --mode=development && webpack --mode=production --output-filename=intact.min.js",
+    "build": "npm run build:fe && npm run build:node",
+    "release": "npm run release-patch",
+    "prelease": "npm run build && npm version prerelease && git push --tags --force && git push && npm publish",
+    "release-patch": "npm run build && npm version patch && git push --tags && git push && npm publish",
+    "release-minor": "npm run build && npm version minor && git push --tags && git push && npm publish",
+    "release-major": "npm run build && npm version major && git push --tags && git push && npm publish"
   },
   "repository": {
     "type": "git",
@@ -15,5 +24,36 @@
     "intact"
   ],
   "author": "wangjianliang",
-  "license": "MIT"
+  "license": "MIT",
+  "peerDependencies": {
+    "intact": "^2.3.0",
+    "react": "^16.0.0"
+  },
+  "devDependencies": {
+    "babel-core": "^6.26.3",
+    "babel-loader": "^7.1.5",
+    "babel-plugin-external-helpers": "^6.22.0",
+    "babel-plugin-transform-decorators-legacy": "^1.3.4",
+    "babel-preset-env": "^1.7.0",
+    "babel-preset-stage-0": "^6.24.1",
+    "chai": "^4.2.0",
+    "css-loader": "^1.0.0",
+    "intact": "^2.3.0",
+    "karma": "^3.0.0",
+    "karma-chai": "^0.1.0",
+    "karma-chrome-launcher": "^2.2.0",
+    "karma-mocha": "^1.3.0",
+    "karma-sinon-chai": "^2.0.2",
+    "karma-sourcemap-loader": "^0.3.7",
+    "karma-webpack": "^3.0.5",
+    "mocha": "^5.2.0",
+    "react": "^16.0.0",
+    "sinon": "^7.0.0",
+    "sinon-chai": "^3.2.0",
+    "style-loader": "^0.23.1",
+    "vdt": "^1.3.1",
+    "vdt-loader": "^1.3.1",
+    "webpack": "^4.22.0",
+    "webpack-cli": "^3.1.2"
+  }
 }
