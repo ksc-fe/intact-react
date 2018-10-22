@@ -1,7 +1,11 @@
 {
-  "presets": ["env", "stage-0"],
+  "presets": [
+    "env",
+    "stage-0"
+  ],
   "plugins": [
-    "transform-decorators-legacy",
-    "external-helpers"
+    "add-module-exports",
+    "transform-runtime",
+    "transform-decorators-legacy"
   ]
 }

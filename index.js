@@ -1,1 +1,1 @@
-console.log('====')
+export {default} from './src/index.js';
