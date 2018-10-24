@@ -49,7 +49,7 @@ describe('Unit test', () => {
             const container = document.createElement('div');
             document.body.appendChild(container);
             console.log(h(Idom, {key: 22}, '==='))
-            const component = [h(Rdom, {key: 11}), h(Idom, {key: 22}, '==='), '==='];
+            const component = [h(Rdom, {key: 11}), '==='];
             ReactDOM.render(
                 component,
                 container,

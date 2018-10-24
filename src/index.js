@@ -50,10 +50,7 @@ export default class IntactReact extends Intact {
             ) :
             {}
     }
-
-    render() {
-        return super.render && super.render();
-    }
+    
 
     componentDidMount() {
 
