@@ -5,18 +5,9 @@ import ReactDOM from 'react-dom'
 const h = React.createElement;
 
 
-class Ajhj extends Intact {
+class Child extends Intact {
     @Intact.template()
-    static template = `<div>sd</div>`
-}
-
-class Idom extends Intact {
-    @Intact.template()
-    static template = `<Ajhj class="sdddd" key="-ss" ev-click={self.onClick}>sldkj Hello {self.get("count")}!</Ajhj>`;
-
-    _init() {
-        this.Ajhj = Ajhj;
-    }
+    static template = `<div ev-click={self.onClick}>{self.get("children")} child default content {self.get("count")}!</div>`
 
     onClick(e) {
         this.set('count', this.get('count') + 1);
@@ -29,11 +20,35 @@ class Idom extends Intact {
     }
 }
 
+class Idom extends Intact {
+    @Intact.template()
+    static template = `<div class={self.get('className')} key="1" ev-click={self.onClick}>
+                intact default  content
+                <Child class="default" >
+                    child wrap content {self.get("count")}!
+                </Child>
+            </div>`;
+
+    _init() {
+        this.Child = Child;
+    }
+
+    onClick(e) {
+        this.set('count', this.get('count') + 1);
+    }
+
+    defaults() {
+        return {
+            count: 10
+        };
+    }
+}
+
 
 class Rdom extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {count: 1};
+        this.state = {count: 20};
     }
 
     componentDidMount() {
@@ -42,7 +57,7 @@ class Rdom extends React.Component {
 
     render() {
         console.log(this, 'react render')
-        const a = h(
+        return h(
             'div',
             {
                 id: 'react',
@@ -52,27 +67,79 @@ class Rdom extends React.Component {
                     });
                 }
             },
-            [`this is react component click ${this.state.count}`, h('div', {key: '==='})]
+            [
+                `this is react component click ${this.state.count}`,
+                h(
+                    Child,
+                    {key: '3'},
+                    'react wrap'
+                ),
+                h(
+                    'div',
+                    {key: '2'},
+                    'react content'
+                )
+            ]
         )
-        return a
     }
 }
+
+class Wdom extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {count: 1};
+    }
+
+    componentDidMount() {
+        console.log(this, 'react componentDidMount')
+    }
+
+    click() {
+        this.setState({
+            count: this.state.count + 1
+        })
+    }
+
+    render() {
+        const r = h(Rdom, {key: 11});
+        const i = h(
+            Idom,
+            {
+                className: `className-${this.state.count}`,
+                key: '3'
+            },
+            [
+                h(Rdom, {key: 1}),
+                h(Idom, {key: 2}),
+                '正常文本'
+            ]
+        );
+        const s = h(
+            Idom,
+            {
+                key: '4'
+            }
+        );
+        return h('div', {
+            onClick: this.click.bind(this)
+        }, ['wrap', r, s, i])
+    }
+}
+
 
 describe('Unit test', () => {
     describe('Render', () => {
         it('render intact component in react', (done) => {
             const container = document.createElement('div');
             document.body.appendChild(container);
-            const r = h(Rdom, {key: 11});
-            const i = h(Idom, {key: 22}, [h(Rdom, {key: 1}), h(Idom, {key: 2}), '====', 'skjd']);
-            const component = [r, i, '==='];
+            const component = h(Wdom, {});
             ReactDOM.render(
                 component,
                 container,
                 () => {
                     const react = document.getElementById('react');
                     let count = 1;
-                    react.click();
+                    // react.click();
                     setTimeout(() => {
                         const html = react.innerHTML;
                         count = count + 1;
