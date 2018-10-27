@@ -23,7 +23,8 @@ class Child extends Intact {
 class Idom extends Intact {
     @Intact.template()
     static template = `<div class={self.get('className')} key="1" ev-click={self.onClick}>
-                intact default  content
+                intact default content
+                {self.get('children')}
                 <Child class="default" >
                     child wrap content {self.get("count")}!
                 </Child>
@@ -109,9 +110,9 @@ class Wdom extends React.Component {
                 key: '3'
             },
             [
-                h(Rdom, {key: 1}),
+                h(Rdom, {key: 1, className: `className-${this.state.count}`}),
                 h(Idom, {key: 2}),
-                '正常文本'
+                `正常文本${this.state.count}`
             ]
         );
         const s = h(

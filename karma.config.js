@@ -3,7 +3,6 @@ const webpack = {
     mode: 'development',
     devtool: 'eval-source-map',
     module: baseWebpack.module,
-    devtool: '#inline-source-map',
     resolve: {
         alias: {}
     }

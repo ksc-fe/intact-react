@@ -8,6 +8,13 @@ let hasSymbol = typeof Symbol === 'function' && Symbol.for;
 let REACT_ELEMENT_TYPE = hasSymbol ? Symbol.for('react.element') : 0xeac7;
 
 
+function unfreeze(o) {
+    let u = extend({}, o);
+    u.__proto__ = o.__proto__;
+    u.constructor = o.constructor;
+    return u
+}
+
 function conversionChildrenBlocks(children) {
     if (!children) {
         return {
@@ -21,13 +28,23 @@ function conversionChildrenBlocks(children) {
     let newChildren = []
     let newBlocks = {}
     each(children, (child) => {
+        if (!child) {
+            return
+        }
         let vNode = child;
         if (isString(child)) {
-            vNode = children
-        }
-        if (isObject(child) && isFunction(child.type) && child.$$typeof === REACT_ELEMENT_TYPE) {
-            const type = inherit(child.type, Intact);
+            vNode = child
+        } else if (isObject(child) &&
+            child.$$typeof === REACT_ELEMENT_TYPE &&
+            isFunction(child.type)
+        ) {
+
             const props = extend({}, child.props);
+            let type = child.type;
+            if (child.type.prototype.$$cid !== 'IntactReact') {
+                type = conversionIntact(child.type, props);
+            }
+
             vNode = h(
                 type,
                 conversionProps(props),
@@ -38,7 +55,8 @@ function conversionChildrenBlocks(children) {
             );
         }
         if (isObject(child.props) && child.props.slot) {
-            newBlocks[child.props.slot] = vNode;
+            const slotName = child.props.slot || 'default';
+            newBlocks[slotName] = vNode;
         } else {
             newChildren.push(vNode);
         }
@@ -49,51 +67,50 @@ function conversionChildrenBlocks(children) {
     };
 }
 
-function inherit(o, prototype) {
-    let IntactReact = function IntactReact() {
-        let _len = arguments.length;
-        let args = Array(_len);
+function conversionIntact(ctor, props) {
+    const instance = new ctor(props);
 
-        for (let _key = 0; _key < _len; _key++) {
-            args[_key] = arguments[_key];
-        }
-
-        const self = new o(args);
-
-        self.props = self.props || {};
-        self.template = function () {
-            return [' ']
-            // return conversionChildrenBlocks(self.render());
-        }
-
-        for (let key in self.state) {
-            if (!hasOwn.call(self.state, key)) {
-                self.props[key] = self.state[key];
+    class InheritIntactReact extends Intact {
+        constructor(props) {
+            super(props);
+            for (let key in instance) {
+                if (hasOwn.call(instance, key) &&
+                    key !== 'props'
+                ) {
+                    this[key] = instance[key];
+                }
+            }
+            this.on('$mounted', () => {
+                this.componentDidMount && this.componentDidMount();
+            });
+            this.on('$destroyed', () => {
+                this.componentWillUnmount && this.componentWillUnmount();
+            });
+            this._update = () => {
+                this.shouldComponentUpdate && this.shouldComponentUpdate();
+                this.getSnapshotBeforeUpdate && this.getSnapshotBeforeUpdate();
+                this.componentDidUpdate && this.componentDidUpdate()
             }
         }
 
-        self.setState = (state, callback) => {
-            self.set(state);
-            isFunction(callback) && callback.apply(self);
-        };
+        defaults() {
+            return conversionProps(extend({}, props, instance.state))
+        }
 
-        self.forceUpdate = (callback) => {
-            self.update();
-            isFunction(callback) && callback.apply(self);
-        };
+        static template = Intact.Vdt.compile('<!--{self.children}-->')
 
-        return prototype.apply(self, args);
-    };
+        setState(state, callback) {
+            this.set(state);
+            isFunction(callback) && callback.apply(this);
+        }
 
-    IntactReact.prototype = create(prototype);
-    IntactReact.prototype.__proto__ = prototype;
-    IntactReact.prototype.constructor = IntactReact;
-    for (let key in o) {
-        if (!hasOwn.call(IntactReact, key)) {
-            IntactReact[key] = o[key];
+        forceUpdate(callback) {
+            this.update();
+            isFunction(callback) && callback.apply(this);
         }
     }
-    return IntactReact
+
+    return InheritIntactReact;
 }
 
 function isEvent(props, key) {
@@ -123,5 +140,6 @@ function conversionProps(props) {
 
 
 export {
-    conversionProps
+    conversionProps,
+    unfreeze
 }

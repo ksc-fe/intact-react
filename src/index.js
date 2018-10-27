@@ -1,16 +1,17 @@
 import React from 'react';
 // for webpack alias Intact to IntactReact
 import Intact from 'intact/dist';
-import {conversionProps} from './util'
+import {conversionProps, unfreeze} from './util'
 
 const {get, set, extend, isArray, create, isFunction} = Intact.utils;
 
-export default class IntactReact extends Intact {
+class IntactReact extends Intact {
     constructor(...args) {
         super(...args);
-        this.$$intactProps = this.props;
-        this.props = args[0];
+        this.$$innerInstance = {};
+        this.props = args[0];//react 需要验证props 全等 ,蛋疼
         this.$$wrapDom = null;
+        this.$$props = extend({}, this.attributes, this.props);
     }
 
     get $$cid() {
@@ -19,30 +20,31 @@ export default class IntactReact extends Intact {
 
     componentDidMount() {
         const parentElement = this.$$wrapDom.parentElement;
-        this.props = conversionProps(this.props);
+        this.$$innerInstance = new this.constructor(conversionProps(this.$$props));
         parentElement.replaceChild(
-            this.init(),
+            this.$$innerInstance.init(),
             this.$$wrapDom
         );
     }
 
+    componentWillUnmount() {
+        this.$$innerInstance && this.$$innerInstance.destroy();
+    }
+
     componentDidUpdate() {
-        this.update()
+        this.$$innerInstance.set(conversionProps(this.$$props));
+        this.$$innerInstance && this.$$innerInstance.update();
     }
 
     render() {
-        this.props = extend(this.$$intactProps, this.props);
-        return React.createElement('i', extend({}, this.props, {
-            ref: (element) => {
-                this.$$wrapDom = element
-            },
-            children: ''
-        }), '');
-    }
-
-    get(...args) {
-        this.props = this.$$intactProps
-        return super.get(...args);
+        return React.createElement(
+            'i',
+            extend({}, {
+                ref: (element) => {
+                    this.$$wrapDom = element
+                }
+            }),
+            '');
     }
 
     get isMounted() {
@@ -54,4 +56,6 @@ export default class IntactReact extends Intact {
     }
 
 }
+
+export default IntactReact
 
