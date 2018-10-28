@@ -1,7 +1,9 @@
 import Intact from 'intact/dist';
 
 const h = Intact.Vdt.miss.h;
-const {each, isFunction, isString, isArray, isObject, hasOwn, create, extend} = Intact.utils;
+const Types = Intact.Vdt.miss.Types;
+const VNode = Intact.Vdt.miss.VNode;
+const {each, isFunction, isString, isArray, isObject, hasOwn, create, extend, isStringOrNumber} = Intact.utils;
 
 //from react16 2456 行
 let hasSymbol = typeof Symbol === 'function' && Symbol.for;
@@ -32,35 +34,34 @@ function conversionChildrenBlocks(children) {
             return
         }
         let vNode = child;
-        if (isString(child)) {
-            vNode = child
-        } else if (isObject(child) &&
-            child.$$typeof === REACT_ELEMENT_TYPE &&
-            isFunction(child.type)
-        ) {
-
-            const props = extend({}, child.props);
+        if (isStringOrNumber(child)) {
+            vNode = new VNode(Types.Text, null, {}, child);
+        } else if (isObject(child) && child.$$typeof === REACT_ELEMENT_TYPE) {
+            let props = conversionProps(extend({}, child.attributes, child.props));
             let type = child.type;
-            if (child.type.prototype.$$cid !== 'IntactReact') {
+            if (isFunction(child.type) &&
+                child.type.prototype.$$cid !== 'IntactReact') {
                 type = conversionIntact(child.type, props);
             }
-
             vNode = h(
                 type,
-                conversionProps(props),
+                props,
                 null,
                 null,
                 child.key,
                 child.ref
             );
         }
-        if (isObject(child.props) && child.props.slot) {
-            const slotName = child.props.slot || 'default';
+        if (isObject(vNode.props) && vNode.props.slot) {
+            const slotName = vNode.props.slot || 'default';
             newBlocks[slotName] = vNode;
         } else {
             newChildren.push(vNode);
         }
     });
+    if (newChildren.length === 1) {
+        newChildren = newChildren[0]
+    }
     return {
         children: newChildren,
         _blocks: newBlocks
@@ -77,7 +78,11 @@ function conversionIntact(ctor, props) {
                 if (hasOwn.call(instance, key) &&
                     key !== 'props'
                 ) {
-                    this[key] = instance[key];
+                    if (isFunction(instance[key])) {
+                        this[key] = instance[key].bind(this);
+                    } else {
+                        this[key] = instance[key];
+                    }
                 }
             }
             this.on('$mounted', () => {
@@ -86,21 +91,36 @@ function conversionIntact(ctor, props) {
             this.on('$destroyed', () => {
                 this.componentWillUnmount && this.componentWillUnmount();
             });
-            this._update = () => {
-                this.shouldComponentUpdate && this.shouldComponentUpdate();
-                this.getSnapshotBeforeUpdate && this.getSnapshotBeforeUpdate();
-                this.componentDidUpdate && this.componentDidUpdate()
-            }
+        }
+
+        _update() {
+            this.props = conversionProps(extend({}, props, {state: instance.state}));
+            this.shouldComponentUpdate && this.shouldComponentUpdate();
+            this.getSnapshotBeforeUpdate && this.getSnapshotBeforeUpdate();
+            this.componentDidUpdate && this.componentDidUpdate()
         }
 
         defaults() {
-            return conversionProps(extend({}, props, instance.state))
+            return conversionProps(extend({}, props, {state: instance.state}))
         }
 
-        static template = Intact.Vdt.compile('<!--{self.children}-->')
+        template(obj, _Vdt, blocks, $callee) {
+            let self = this.data;
+            const {children} = conversionChildrenBlocks(instance.render.apply(self));
+            if (children.length > 1) {
+                throw new Error('children must return only one' + children);
+            }
+            const vNode = children;
+            vNode.children = vNode.props.children;
+            return vNode
+        }
 
         setState(state, callback) {
-            this.set(state);
+            this.set({state});
+            this.state = state;
+            console.log(this.state, '++===');
+            this.vNode = this.vdt.template();
+            this.update();
             isFunction(callback) && callback.apply(this);
         }
 
@@ -124,8 +144,8 @@ function isEvent(props, key) {
 function conversionProps(props) {
     for (let key in props) {
         if (hasOwn.call(props, key)) {
-            if (isEvent[props]) {
-                props[`ev-${key.substr(2)}`] = props[key];
+            if (isEvent(props, key)) {
+                props[`ev-${key.substr(2, 1).toLowerCase()}${key.substr(3)}`] = props[key];
             }
             let _children = props['children'];
             if (_children) {

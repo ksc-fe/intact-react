@@ -10,7 +10,8 @@ class Child extends Intact {
     static template = `<div ev-click={self.onClick}>{self.get("children")} child default content {self.get("count")}!</div>`
 
     onClick(e) {
-        this.set('count', this.get('count') + 1);
+        const count = this.get('count');
+        this.set('count', count + 1);
     }
 
     defaults() {
@@ -23,6 +24,7 @@ class Child extends Intact {
 class Idom extends Intact {
     @Intact.template()
     static template = `<div class={self.get('className')} key="1" ev-click={self.onClick}>
+                <div>========</div>
                 intact default content
                 {self.get('children')}
                 <Child class="default" >
@@ -53,15 +55,13 @@ class Rdom extends React.Component {
     }
 
     componentDidMount() {
-        console.log(this, 'react componentDidMount')
     }
 
     render() {
-        console.log(this, 'react render')
         return h(
             'div',
             {
-                id: 'react',
+                id: 'reactinnder',
                 onClick: () => {
                     this.setState({
                         count: this.state.count + 1
@@ -79,7 +79,8 @@ class Rdom extends React.Component {
                     'div',
                     {key: '2'},
                     'react content'
-                )
+                ),
+                this.props.children
             ]
         )
     }
@@ -88,7 +89,9 @@ class Rdom extends React.Component {
 class Wdom extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {count: 1};
+        this.state = {
+            count: 1
+        };
     }
 
     componentDidMount() {
@@ -110,7 +113,7 @@ class Wdom extends React.Component {
                 key: '3'
             },
             [
-                h(Rdom, {key: 1, className: `className-${this.state.count}`}),
+                h(Rdom, {key: 1, className: `className-${this.state.count}`}, '=====这是一个测试内容===='),
                 h(Idom, {key: 2}),
                 `正常文本${this.state.count}`
             ]
@@ -118,12 +121,14 @@ class Wdom extends React.Component {
         const s = h(
             Idom,
             {
-                key: '4'
+                key: '4',
+                className: `idom-${this.state.count}`
             }
         );
         return h('div', {
+            id: 'react',
             onClick: this.click.bind(this)
-        }, ['wrap', r, s, i])
+        }, ['wrap', i, `${this.state.count}`])
     }
 }
 
@@ -140,12 +145,7 @@ describe('Unit test', () => {
                 () => {
                     const react = document.getElementById('react');
                     let count = 1;
-                    // react.click();
                     setTimeout(() => {
-                        const html = react.innerHTML;
-                        count = count + 1;
-                        // expect(html).to.eql(`this is react component click ${count}`);
-                        // container.remove();
                         done()
                     })
                 }

@@ -7,11 +7,14 @@ const {get, set, extend, isArray, create, isFunction} = Intact.utils;
 
 class IntactReact extends Intact {
     constructor(...args) {
+        const isReactCall = args.length === 2;
         super(...args);
-        this.$$innerInstance = {};
-        this.props = args[0];//react 需要验证props 全等 ,蛋疼
-        this.$$wrapDom = null;
-        this.$$props = extend({}, this.attributes, this.props);
+        if (isReactCall) {
+            this.$$innerInstance = {};
+            this.props = args[0];//react 需要验证props 全等 ,蛋疼
+            this.$$wrapDom = null;
+            this.$$props = extend({}, this.attributes, this.props);
+        }
     }
 
     get $$cid() {
@@ -20,7 +23,7 @@ class IntactReact extends Intact {
 
     componentDidMount() {
         const parentElement = this.$$wrapDom.parentElement;
-        this.$$innerInstance = new this.constructor(conversionProps(this.$$props));
+        this.$$innerInstance = new this.constructor(this.$$props);
         parentElement.replaceChild(
             this.$$innerInstance.init(),
             this.$$wrapDom
@@ -32,11 +35,12 @@ class IntactReact extends Intact {
     }
 
     componentDidUpdate() {
-        this.$$innerInstance.set(conversionProps(this.$$props));
+        this.$$innerInstance.props = extend(this.$$innerInstance.props, this.$$props);
         this.$$innerInstance && this.$$innerInstance.update();
     }
 
     render() {
+        this.$$props = conversionProps(extend(this.$$props, this.props));
         return React.createElement(
             'i',
             extend({}, {
