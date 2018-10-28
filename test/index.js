@@ -30,6 +30,7 @@ class Idom extends Intact {
                 <Child class="default" >
                     child wrap content {self.get("count")}!
                 </Child>
+                <div>========</div>
             </div>`;
 
     _init() {
@@ -37,7 +38,9 @@ class Idom extends Intact {
     }
 
     onClick(e) {
-        this.set('count', this.get('count') + 1);
+        // debugger
+        const count = this.get('count');
+        this.set('count', count + 1);
     }
 
     defaults() {
@@ -106,6 +109,15 @@ class Wdom extends React.Component {
 
     render() {
         const r = h(Rdom, {key: 11});
+
+        const s = h(
+            Idom,
+            {
+                key: '4',
+                className: `idom-${this.state.count}`
+            }
+        );
+
         const i = h(
             Idom,
             {
@@ -113,17 +125,10 @@ class Wdom extends React.Component {
                 key: '3'
             },
             [
-                h(Rdom, {key: 1, className: `className-${this.state.count}`}, '=====这是一个测试内容===='),
+                h(Rdom, {key: 1, className: `className-${this.state.count}`}, `=====这是一个测试${this.state.count}内容====`),
                 h(Idom, {key: 2}),
                 `正常文本${this.state.count}`
             ]
-        );
-        const s = h(
-            Idom,
-            {
-                key: '4',
-                className: `idom-${this.state.count}`
-            }
         );
         return h('div', {
             id: 'react',

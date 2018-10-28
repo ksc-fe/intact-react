@@ -7,13 +7,13 @@ const {get, set, extend, isArray, create, isFunction} = Intact.utils;
 
 class IntactReact extends Intact {
     constructor(...args) {
-        const isReactCall = args.length === 2;
+        const isReactCall = args.length === 2; //react 实例化是会传入两个参数  , 故使用此判断 是否为react 调用实例
         super(...args);
         if (isReactCall) {
             this.$$innerInstance = {};
             this.props = args[0];//react 需要验证props 全等 ,蛋疼
             this.$$wrapDom = null;
-            this.$$props = extend({}, this.attributes, this.props);
+            this.$$props = extend({}, this.props);
         }
     }
 
@@ -23,7 +23,8 @@ class IntactReact extends Intact {
 
     componentDidMount() {
         const parentElement = this.$$wrapDom.parentElement;
-        this.$$innerInstance = new this.constructor(this.$$props);
+        //重新初始化并创建节点 , 替换已存在节点
+        this.$$innerInstance = new this.constructor(conversionProps(this.$$props));
         parentElement.replaceChild(
             this.$$innerInstance.init(),
             this.$$wrapDom
@@ -34,13 +35,13 @@ class IntactReact extends Intact {
         this.$$innerInstance && this.$$innerInstance.destroy();
     }
 
-    componentDidUpdate() {
-        this.$$innerInstance.props = extend(this.$$innerInstance.props, this.$$props);
-        this.$$innerInstance && this.$$innerInstance.update();
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        // 更新实例
+        this.$$innerInstance && this.$$innerInstance.set(conversionProps(this.$$props));
     }
 
     render() {
-        this.$$props = conversionProps(extend(this.$$props, this.props));
+        this.$$props = extend(this.$$props, this.props);
         return React.createElement(
             'i',
             extend({}, {
