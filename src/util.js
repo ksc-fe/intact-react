@@ -127,15 +127,19 @@ function conversionChildrenBlocks(children) {
             vNode = h(
                 type,
                 props,
-                null,
+                props.children,
                 null,
                 child.key,
                 child.ref
             );
         }
         if (isObject(vNode.props) && vNode.props.slot) {
-            const slotName = vNode.props.slot || 'default';
-            newBlocks[slotName] = vNode;
+            const slotName = (vNode.props.slot === undefined || vNode.props.slot === true) ? 'default' : vNode.props.slot;
+            delete vNode.props.slot;
+            newBlocks[slotName] = function (parent) {
+                vNode.children = vNode.props.children;
+                return vNode;
+            };
         } else {
             newChildren.push(vNode);
         }
