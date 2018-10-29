@@ -13,11 +13,23 @@ let REACT_ELEMENT_TYPE = hasSymbol ? Symbol.for('react.element') : 0xeac7;
 class InheritIntactReact extends Intact {
     constructor(props) {
         super(props);
-        this.instance = new InheritIntactReact.Ctor(props);
+        this.$$ctor = InheritIntactReact.Ctor;
+        this.instance = new this.$$ctor(props);
+        const ignoreKeys = [
+            'props',
+            '_create',
+            '_mount',
+            '_beforeUpdate',
+            '_update',
+            '_destory',
+            'defaults',
+            'template',
+            'setState',
+            'forceUpdate',
+        ];
         for (let key in this.instance) {
             if (hasOwn.call(this.instance, key) &&
-                key !== 'props'
-            ) {
+                !ignoreKeys.includes(key)) {
                 if (isFunction(this.instance[key])) {
                     this[key] = this.instance[key].bind(this);
                 } else {
@@ -25,22 +37,36 @@ class InheritIntactReact extends Intact {
                 }
             }
         }
-        this.on('$mounted', () => {
-            this.componentDidMount && this.componentDidMount();
-        });
-        this.on('$destroyed', () => {
-            this.componentWillUnmount && this.componentWillUnmount();
-        });
+    }
+
+    _create() {
+        this.$$ctor.getDerivedStateFromProps && this.$$ctor.getDerivedStateFromProps();
+        this.componentWillMount && this.componentWillMount();
+    }
+
+    _mount() {
+        this.componentDidMount && this.componentDidMount();
+    }
+
+    _beforeUpdate() {
+        this.$$ctor.getDerivedStateFromProps && this.$$ctor.getDerivedStateFromProps();
+        this.componentWillReceiveProps && this.componentWillReceiveProps();
+        this.componentWillUpdate && this.componentWillUpdate();
+        this.shouldComponentUpdate && this.shouldComponentUpdate();
     }
 
     _update() {
-        this.shouldComponentUpdate && this.shouldComponentUpdate();
         this.getSnapshotBeforeUpdate && this.getSnapshotBeforeUpdate();
         this.componentDidUpdate && this.componentDidUpdate()
     }
 
+    _destory() {
+        this.componentWillUnmount && this.componentWillUnmount();
+
+    }
+
     defaults() {
-        return InheritIntactReact.props
+        return InheritIntactReact.Ctor.props
     }
 
     template(obj, _Vdt, blocks, $callee) {
@@ -92,7 +118,7 @@ function conversionChildrenBlocks(children) {
             if (isFunction(child.type) &&
                 child.type.prototype.$$cid !== 'IntactReact') {
                 InheritIntactReact.Ctor = child.type;
-                InheritIntactReact.props = props;
+                InheritIntactReact.Ctor.props = props;
                 type = InheritIntactReact;
             }
             vNode = h(
@@ -132,12 +158,20 @@ function isEvent(props, key) {
 function conversionProps(props, init) {
     for (let key in props) {
         if (hasOwn.call(props, key)) {
+            //兼容 事件类型
             if (isEvent(props, key)) {
-                props[`ev-${key.substr(2, 1).toLowerCase()}${key.substr(3)}`] = props[key];
+                const evEvent = `ev-${key.replace(/^on([A-Z].*)$/, "$1").toLowerCase()}`;
+                props[evEvent] = props[key];
             }
-            let _children = props['children'];
-            if (_children && init !== false) {
-                let {children, _blocks} = conversionChildrenBlocks(_children);
+            //兼容 react 支持obj类型的ref
+            if (key === 'ref' && _.isObject(props[key])) {
+                props[key] = (i) => {
+                    props[key].current = i
+                }
+            }
+            //兼容 children 到 intact 类型
+            if (key === 'children' && props['children'] && init !== false) {
+                let {children, _blocks} = conversionChildrenBlocks(props['children']);
                 props['children'] = children;
                 props['_blocks'] = _blocks;
             }
