@@ -16,6 +16,7 @@ class InheritIntactReact extends Intact {
         this.$$ctor = InheritIntactReact.Ctor;
         this.instance = new this.$$ctor(props);
         const ignoreKeys = [
+            'constructor',
             'props',
             '_create',
             '_mount',
@@ -27,13 +28,15 @@ class InheritIntactReact extends Intact {
             'setState',
             'forceUpdate',
         ];
-        for (let key in this.instance) {
-            if (hasOwn.call(this.instance, key) &&
-                !ignoreKeys.includes(key)) {
-                if (isFunction(this.instance[key])) {
-                    this[key] = this.instance[key].bind(this);
+        const instance = this.instance;
+        let keys = Object.getOwnPropertyNames(instance.__proto__);
+        keys = keys.concat(Object.getOwnPropertyNames(instance));
+        for (let key of keys) {
+            if (!ignoreKeys.includes(key)) {
+                if (isFunction(instance[key])) {
+                    this.__proto__[key] = instance[key].bind(this);
                 } else {
-                    this[key] = this.instance[key];
+                    this.__proto__[key] = instance[key];
                 }
             }
         }
@@ -162,6 +165,7 @@ function conversionProps(props, init) {
             if (isEvent(props, key)) {
                 const evEvent = `ev-${key.replace(/^on([A-Z].*)$/, "$1").toLowerCase()}`;
                 props[evEvent] = props[key];
+                delete props[key];
             }
             //兼容 react 支持obj类型的ref
             if (key === 'ref' && _.isObject(props[key])) {
