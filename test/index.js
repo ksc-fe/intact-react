@@ -57,7 +57,7 @@ br.style = 'height:100px';
 
 describe('Unit test', () => {
     describe('Render A Intact Event 1', () => {
-        it('render intact component in react', (done) => {
+        it('intact in react', (done) => {
             const container1 = document.createElement('div');
             document.body.appendChild(container1);
             const component = h(React1, {id: 'react1'}, [h(Intact1, {key: 1, id: 'intact1'})]);
@@ -86,7 +86,7 @@ describe('Unit test', () => {
         });
     })
     describe('Render A Intact Event 2', () => {
-        it('render intact component in react', (done) => {
+        it('react in intact', (done) => {
             const container2 = document.createElement('div');
             document.body.appendChild(container2);
             const component = h(Intact1, {id: 'intact2'}, [h(React1, {key: 1, id: 'react2'})]);
@@ -115,7 +115,7 @@ describe('Unit test', () => {
         });
     })
     describe('Render A Intact Inner React event', () => {
-        it('render intact component in react', (done) => {
+        it('react in intact 2', (done) => {
             const container3 = document.createElement('div');
             document.body.appendChild(container3);
             const component = h(Intact1, {id: 'intact3'}, [h(React1, {key: 1, id: 'react3'}, '==')]);
@@ -144,7 +144,7 @@ describe('Unit test', () => {
         });
     })
     describe('Render A Intact Inner React block', () => {
-        it('render intact component in react', (done) => {
+        it('block', (done) => {
             // const container3 = document.createElement('div');
             // document.body.appendChild(container3);
             //
