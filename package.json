@@ -10,10 +10,10 @@
     "build:fe": "webpack --mode=development && webpack --mode=production --output-filename=intact.react.min.js",
     "build": "npm run build:fe && npm run build:node",
     "release": "npm run release-patch",
-    "prelease": "npm run build && npm version prerelease && git push --tags --force && git push && npm publish",
-    "release-patch": "npm run build && npm version patch && git push --tags && git push && npm publish",
-    "release-minor": "npm run build && npm version minor && git push --tags && git push && npm publish",
-    "release-major": "npm run build && npm version major && git push --tags && git push && npm publish"
+    "prelease": "npm run build && git commit -am 'build...' &&  npm version prerelease && git push --tags --force && git push && npm publish",
+    "release-patch": "npm run build && git commit -am 'build...' &&  npm version patch && git push --tags && git push && npm publish",
+    "release-minor": "npm run build && git commit -am 'build...' &&  npm version minor && git push --tags && git push && npm publish",
+    "release-major": "npm run build && git commit -am 'build...' &&  npm version major && git push --tags && git push && npm publish"
   },
   "repository": {
     "type": "git",
