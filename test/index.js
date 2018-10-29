@@ -10,7 +10,6 @@ class Intact1 extends Intact {
     static template = `<div ev-click={self.onClick} id={self.get('id')}>Intact {self.get("count")}{self.get("children")}<b:header></b:header><b:default></b:default></div>`
 
     onClick(e) {
-        console.log(this)
         const count = this.get('count');
         this.set('count', count + 1);
     }
@@ -41,8 +40,6 @@ class React1 extends React.Component {
     }
 
     render() {
-        console.log('=====')
-        console.log(this.click)
         return h('div', {
             id: this.props.id,
             onClick: this.click.bind(this)
@@ -68,15 +65,18 @@ describe('Unit test', () => {
                 component,
                 container1,
                 () => {
+                    const intact = document.getElementById('intact1');
                     const react = document.getElementById('react1');
                     let count = 1;
+                    let count2 = 1;
                     setTimeout(() => {
                         react.click()
                         count++;
-                        react.click()
+                        intact.click()
                         count++;
+                        count2++;
                         console.log(react.innerHTML)
-                        assert(react.innerHTML === `React${count}<div id="intact1">Intact 1</div>`, '渲染结果不正确');
+                        assert(react.innerHTML === `React${count}<div id="intact1">Intact ${count2}</div>`, '渲染结果不正确');
                         // container1.remove();
                         container1.appendChild(br.cloneNode())
                         done()
@@ -89,20 +89,23 @@ describe('Unit test', () => {
         it('render intact component in react', (done) => {
             const container2 = document.createElement('div');
             document.body.appendChild(container2);
-            const component = h(React1, {id: 'react2'}, [h(Intact1, {key: 1, id: 'intact2'})]);
+            const component = h(Intact1, {id: 'intact2'}, [h(React1, {key: 1, id: 'react2'})]);
             ReactDOM.render(
                 component,
                 container2,
                 () => {
                     const intact = document.getElementById('intact2');
+                    const react = document.getElementById('react2');
                     let count = 1;
+                    let count2 = 1;
                     setTimeout(() => {
                         intact.click()
                         count++;
-                        intact.click()
+                        react.click()
                         count++;
+                        count2++;
                         console.log(intact.innerHTML)
-                        assert(intact.innerHTML === `Intact ${count}`, '渲染结果不正确');
+                        assert(intact.innerHTML === `Intact ${count}<div id="react2">React${count2}</div>`, '渲染结果不正确');
                         // container2.remove();
                         container2.appendChild(br.cloneNode())
                         done()
@@ -121,14 +124,17 @@ describe('Unit test', () => {
                 container3,
                 () => {
                     const intact = document.getElementById('intact3');
+                    const react = document.getElementById('react3');
                     let count = 1;
+                    let count2 = 1;
                     setTimeout(() => {
                         intact.click()
                         count++;
-                        intact.click()
+                        react.click()
                         count++;
+                        count2++;
                         console.log(intact.innerHTML)
-                        assert(intact.innerHTML === `Intact ${count}<div id="react3">React1==</div>`, '渲染结果不正确');
+                        assert(intact.innerHTML === `Intact ${count}<div id="react3">React${count2}==</div>`, '渲染结果不正确');
                         // container3.remove();
                         container3.appendChild(br.cloneNode())
                         done()
@@ -159,9 +165,6 @@ describe('Unit test', () => {
             const component = h(Intact1,
                 {id: 'intact4'},
                 [
-                    h(React1,
-                        {key: 1, id: 'react4'}
-                    ),
                     h('div',
                         {
                             key: 2,
@@ -169,6 +172,7 @@ describe('Unit test', () => {
                         },
                         h('div', {}, '=====default===')
                     ),
+                    h(React1, {key: 1, id: 'react4'}),
                     h('div',
                         {
                             key: 3,
@@ -182,14 +186,17 @@ describe('Unit test', () => {
                 container4,
                 () => {
                     const intact = document.getElementById('intact4');
+                    const react = document.getElementById('react4');
                     let count = 1;
+                    let count2 = 1;
                     setTimeout(() => {
                         intact.click()
                         count++;
-                        intact.click()
+                        react.click()
                         count++;
+                        count2++;
                         console.log(intact.innerHTML)
-                        assert(intact.innerHTML === `Intact ${count}<div id="react4">React1</div><div>header</div><div><div>=====default===</div></div>`, '渲染结果不正确');
+                        assert(intact.innerHTML === `Intact ${count}<div id="react4">React${count2}</div><div>header</div><div><div>=====default===</div></div>`, '渲染结果不正确');
                         // container4.remove();
                         container4.appendChild(br.cloneNode())
                         done()

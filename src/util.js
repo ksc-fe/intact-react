@@ -34,9 +34,9 @@ class InheritIntactReact extends Intact {
         for (let key of keys) {
             if (!ignoreKeys.includes(key)) {
                 if (isFunction(instance[key])) {
-                    this.__proto__[key] = instance[key].bind(this);
+                    this[key] = instance[key].bind(this);
                 } else {
-                    this.__proto__[key] = instance[key];
+                    this[key] = instance[key];
                 }
             }
         }
