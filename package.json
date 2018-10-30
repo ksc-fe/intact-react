@@ -1,7 +1,7 @@
 {
   "name": "intact-react",
   "version": "1.0.1",
-  "description": "A compatibility layer for running intact component in react v16",
+  "description": "A compatibility layer for running intact component in react",
   "main": "dist/index.js",
   "scripts": {
     "test": "node ./node_modules/karma/bin/karma start karma.config.js",
