@@ -3,6 +3,22 @@ import React from 'react';
 import Intact from 'intact/dist';
 import {conversionProps} from './util'
 
+const {isObject} = Intact.utils;
+
+const _createElement = React.createElement;
+React.createElement = function createElementWithValidation(type, props, children) {
+    const isIntact = isObject(type.prototype) && type.prototype.$$cid === 'IntactReact';
+    const propTypes = type.propTypes;
+    if (isIntact) {
+        delete type.propTypes;
+    }
+    const element = _createElement.call(this, type, props, children);
+    if (isIntact && propTypes) {
+        type.propTypes = propTypes;
+    }
+    return element;
+};
+
 const {get, set, extend, isArray, create, isFunction} = Intact.utils;
 
 class IntactReact extends Intact {

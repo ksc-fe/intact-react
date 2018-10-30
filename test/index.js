@@ -2,15 +2,8 @@ import Intact from '../index';
 import React from 'react'
 import ReactDOM from 'react-dom'
 
+import {Button, ButtonGroup} from 'kpc/components/button';
 
-import IntactA from 'intact'
-
-console.log(IntactA)
-debugger
-// import {Button, ButtonGroup} from 'kpc/@css/components/button';
-
-// debugger
-// console.log(Kpc, Button, ButtonGroup)
 const h = React.createElement;
 
 
@@ -297,10 +290,14 @@ describe('Unit test', () => {
             const component = h(Functional,
                 {id: 'react5'},
                 [
-                    h(ButtonGroup, {},
+                    h(ButtonGroup, {key: 1},
                         [
-                            h(Button, {}, '这是一个按钮1'),
-                            h(Button, {}, '这是一个按钮2')
+                            h(Button, {
+                                key: 1, onClick: () => {
+                                    console.log('======')
+                                }
+                            }, '这是一个按钮1'),
+                            h(Button, {key: 2}, '这是一个按钮2')
                         ]
                     )
                 ])

@@ -1,5 +1,35 @@
 const path = require('path');
-
+const baseWebpack = require('./webpack.config.js');
+baseWebpack.module.rules = baseWebpack.module.rules.concat([
+    {
+        test: /\.css$/,
+        use: [
+            {
+                loader: 'style-loader',
+            },
+            {
+                loader: 'css-loader',
+                options: {
+                    url: true
+                }
+            }
+        ]
+    },
+    {
+        test: /\.(woff2?|eot|ttf|otf|svg)(\?.*)?$/,
+        loader: 'file-loader'
+    }
+])
+const webpack = {
+    mode: 'development',
+    module: baseWebpack.module,
+    resolve: {
+        alias: {
+            'intact$': path.resolve(__dirname, 'dist/intact.react.js'),
+            'kpc': 'kpc/@css'
+        }
+    }
+}
 const KARMA_ENV = process.env.KARMA_ENV;
 module.exports = function (config) {
     config.set({
@@ -12,43 +42,7 @@ module.exports = function (config) {
         preprocessors: {
             './test/*.js': ['webpack'],
         },
-        webpack: {
-            mode: 'none',
-            devtool: 'eval-source-map',
-            module: {
-                rules: [
-                    {
-                        test: /\.js$/,
-                        exclude: [/node_modules/],
-                        loader: 'babel-loader',
-                    },
-                    {
-                        test: /\.css$/,
-                        use: [
-                            {
-                                loader: 'style-loader',
-                            },
-                            {
-                                loader: 'css-loader',
-                                options: {
-                                    url: true
-                                }
-                            }
-                        ]
-                    },
-                    {
-                        test: /\.(woff2?|eot|ttf|otf|svg)(\?.*)?$/,
-                        loader: 'file-loader'
-                    },
-                ]
-            },
-            resolve: {
-                alias: {
-                    'intact$': path.resolve(__dirname, 'dist/intact.react.js'),
-                    'kpc': 'kpc/@css'
-                }
-            }
-        },
+        webpack: webpack,
         frameworks: [
             'mocha',
             'sinon-chai',
