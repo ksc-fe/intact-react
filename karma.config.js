@@ -25,7 +25,7 @@ const webpack = {
     module: baseWebpack.module,
     resolve: {
         alias: {
-            'intact$': path.resolve(__dirname, 'dist/intact.react.js'),
+            'intact$': path.resolve(__dirname, 'index.js'),
             'kpc': 'kpc/@css'
         }
     }

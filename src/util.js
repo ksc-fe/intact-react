@@ -95,6 +95,18 @@ class InheritIntactReact extends Intact {
     }
 }
 
+function isReactComponent(type) {
+    return isFunction(type) &&
+        type.prototype.render &&
+        type.prototype.isReactComponent &&
+        type.prototype.$$cid !== 'IntactReact'
+}
+
+function isReactFunctional(type) {
+    return isFunction(type) &&
+        type.prototype.$$cid !== 'IntactReact'
+}
+
 function conversionChildrenBlocks(children) {
     if (!children) {
         return {
@@ -118,13 +130,11 @@ function conversionChildrenBlocks(children) {
         } else if (isObject(child) && child.$$typeof === REACT_ELEMENT_TYPE) {
             let props = conversionProps(extend({}, child.attributes, child.props));
             let type = child.type;
-            if (isFunction(type) &&
-                type.prototype.render &&
-                type.prototype.isReactComponent) {
+            if (isReactComponent(type)) {
                 InheritIntactReact.Ctor = child.type;
                 InheritIntactReact.Ctor.props = props;
                 type = InheritIntactReact;
-            } else if (isFunction(type)) {
+            } else if (isReactFunctional(type)) {
                 type = (props) => {
                     const _children = child.type(props);
                     const {children} = conversionChildrenBlocks(_children);
