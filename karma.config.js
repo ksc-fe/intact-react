@@ -1,23 +1,54 @@
-const baseWebpack = require('./webpack.config');
-const webpack = {
-    mode: 'development',
-    devtool: 'eval-source-map',
-    module: baseWebpack.module,
-    resolve: {
-        alias: {}
-    }
-}
+const path = require('path');
+
 const KARMA_ENV = process.env.KARMA_ENV;
 module.exports = function (config) {
     config.set({
         browsers: KARMA_ENV === 'cli' ? ['ChromeHeadless'] : undefined,
         port: 9889,
         logLevel: config.LOG_INFO,
-        files: ['./test/index.js'],
+        files: [
+            {pattern: 'test/*.js', watched: true}
+        ],
         preprocessors: {
-            './test/index.js': ['webpack', 'sourcemap'],
+            './test/*.js': ['webpack'],
         },
-        webpack: webpack,
+        webpack: {
+            mode: 'none',
+            devtool: 'eval-source-map',
+            module: {
+                rules: [
+                    {
+                        test: /\.js$/,
+                        exclude: [/node_modules/],
+                        loader: 'babel-loader',
+                    },
+                    {
+                        test: /\.css$/,
+                        use: [
+                            {
+                                loader: 'style-loader',
+                            },
+                            {
+                                loader: 'css-loader',
+                                options: {
+                                    url: true
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        test: /\.(woff2?|eot|ttf|otf|svg)(\?.*)?$/,
+                        loader: 'file-loader'
+                    },
+                ]
+            },
+            resolve: {
+                alias: {
+                    'intact$': path.resolve(__dirname, 'dist/intact.react.js'),
+                    'kpc': 'kpc/@css'
+                }
+            }
+        },
         frameworks: [
             'mocha',
             'sinon-chai',

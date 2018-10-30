@@ -1,7 +1,16 @@
-import Intact from '../index.js';
+import Intact from '../index';
 import React from 'react'
 import ReactDOM from 'react-dom'
 
+
+import IntactA from 'intact'
+
+console.log(IntactA)
+debugger
+// import {Button, ButtonGroup} from 'kpc/@css/components/button';
+
+// debugger
+// console.log(Kpc, Button, ButtonGroup)
 const h = React.createElement;
 
 
@@ -279,6 +288,26 @@ describe('Unit test', () => {
                         done()
                     })
                 })
+        })
+    })
+    describe('render kpc component', () => {
+        it('render button', (done) => {
+            const container10 = document.createElement('div');
+            document.body.appendChild(container10);
+            const component = h(Functional,
+                {id: 'react5'},
+                [
+                    h(ButtonGroup, {},
+                        [
+                            h(Button, {}, '这是一个按钮1'),
+                            h(Button, {}, '这是一个按钮2')
+                        ]
+                    )
+                ])
+            ReactDOM.render(
+                component,
+                container10)
+            done()
         })
     })
 })

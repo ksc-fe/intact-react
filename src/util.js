@@ -202,6 +202,5 @@ function conversionProps(props, init) {
 
 
 export {
-    conversionProps,
-    unfreeze
+    conversionProps
 }

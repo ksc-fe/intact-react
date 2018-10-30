@@ -1,7 +1,7 @@
 import React from 'react';
 // for webpack alias Intact to IntactReact
 import Intact from 'intact/dist';
-import {conversionProps, unfreeze} from './util'
+import {conversionProps} from './util'
 
 const {get, set, extend, isArray, create, isFunction} = Intact.utils;
 
