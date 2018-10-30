@@ -3,7 +3,7 @@ import React from 'react';
 import Intact from 'intact/dist';
 import {conversionProps} from './util'
 
-const {isObject} = Intact.utils;
+const {get, set, extend, isObject, isArray, create, isFunction} = Intact.utils;
 
 const _createElement = React.createElement;
 React.createElement = function createElementWithValidation(type, props, children) {
@@ -19,7 +19,6 @@ React.createElement = function createElementWithValidation(type, props, children
     return element;
 };
 
-const {get, set, extend, isArray, create, isFunction} = Intact.utils;
 
 class IntactReact extends Intact {
     constructor(...args) {
