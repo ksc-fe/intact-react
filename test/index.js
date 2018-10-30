@@ -51,6 +51,12 @@ class React1 extends React.Component {
     }
 }
 
+function Functional(props) {
+    return h('div', {id: props.id}, [
+        props.children
+    ]);
+}
+
 const br = document.createElement('div')
 br.style = 'height:100px';
 
@@ -204,5 +210,75 @@ describe('Unit test', () => {
                 }
             );
         });
+    })
+    describe('Functional React Inner Intact', () => {
+        it('render', (done) => {
+            const container5 = document.createElement('div');
+            document.body.appendChild(container5);
+            const component = h(Functional, {id: 'react5'}, [h(Intact1, {
+                id: "intact5",
+                key: '1'
+            }), h('div', {key: '2'}, 'content')])
+            ReactDOM.render(
+                component,
+                container5, () => {
+                    const intact = document.getElementById('intact5');
+                    const react = document.getElementById('react5');
+                    let count = 1;
+                    setTimeout(() => {
+                        intact.click()
+                        count++;
+                        console.log(react.innerHTML)
+                        assert(react.innerHTML === `<div id="intact5">Intact ${count}</div><div>content</div>`, '渲染结果不正确');
+                        // container4.remove();
+                        container5.appendChild(br.cloneNode())
+                        done()
+                    })
+                })
+        })
+    })
+    describe('Intact Inner Functional React', () => {
+        it('render', (done) => {
+            const container6 = document.createElement('div');
+            document.body.appendChild(container6);
+            const component = h(Intact1,
+                {id: 'intact6'},
+                [
+                    h(
+                        Functional, {
+                            id: "react6",
+                            key: '1'
+                        },
+                        h(React1, {id: 'react6_1', key: '1'})
+                    ),
+                    h(React1, {id: 'react6_3', key: '2'}),
+                    h('div', {key: '3'}, 'content')
+                ])
+            ReactDOM.render(
+                component,
+                container6, () => {
+                    const intact = document.getElementById('intact6');
+                    const react1 = document.getElementById('react6_1');
+                    const react2 = document.getElementById('react6_3');
+                    let count = 1;
+                    let count1 = 1;
+                    let count2 = 1;
+                    setTimeout(() => {
+                        intact.click()
+                        count++;
+                        react1.click();
+                        count++;
+                        count1++;
+                        react2.click();
+                        count++;
+                        count2++;
+                        console.log(intact.innerHTML)
+                        assert(intact.innerHTML === `Intact ${count}<div id="react6"><div id="react6_1">React${count1}</div></div><div id="react6_3">React${count2}</div><div>content</div>`, '渲染结果不正确');
+                        // container4.remove();
+                        container6.appendChild(br.cloneNode())
+                        done()
+                    })
+                })
+        })
     })
 })

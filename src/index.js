@@ -10,7 +10,7 @@ class IntactReact extends Intact {
         const isReactCall = args.length === 2; //react 实例化是会传入两个参数  , 故使用此判断 是否为react 调用实例
         super(...args);
         if (isReactCall) {
-            this.$$innerInstance = {};
+            this.$$innerInstance = undefined;
             this.props = args[0];//react 需要验证props 全等 ,蛋疼
             this.$$wrapDom = null;
             this.$$props = extend({}, this.props);

@@ -118,11 +118,23 @@ function conversionChildrenBlocks(children) {
         } else if (isObject(child) && child.$$typeof === REACT_ELEMENT_TYPE) {
             let props = conversionProps(extend({}, child.attributes, child.props));
             let type = child.type;
-            if (isFunction(child.type) &&
-                child.type.prototype.$$cid !== 'IntactReact') {
+            if (isFunction(type) &&
+                type.prototype.render &&
+                type.prototype.isReactComponent) {
                 InheritIntactReact.Ctor = child.type;
                 InheritIntactReact.Ctor.props = props;
                 type = InheritIntactReact;
+            } else if (isFunction(type)) {
+                type = (props) => {
+                    const _children = child.type(props);
+                    const {children} = conversionChildrenBlocks(_children);
+                    if (children.length > 1) {
+                        throw new Error('children must return only one' + children);
+                    }
+                    const vNode = children;
+                    vNode.children = vNode.props.children;
+                    return vNode
+                }
             }
             vNode = h(
                 type,
