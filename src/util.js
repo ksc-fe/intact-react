@@ -1,4 +1,5 @@
 import Intact from 'intact/dist';
+import React from "react";
 
 const h = Intact.Vdt.miss.h;
 const Types = Intact.Vdt.miss.Types;
@@ -9,6 +10,19 @@ const {each, isFunction, isString, isArray, isObject, hasOwn, create, extend, is
 let hasSymbol = typeof Symbol === 'function' && Symbol.for;
 let REACT_ELEMENT_TYPE = hasSymbol ? Symbol.for('react.element') : 0xeac7;
 
+const _createElement = React.createElement;
+React.createElement = function createElementWithValidation(type, props, children) {
+    const isIntact = isObject(type.prototype) && type.prototype.$$cid === 'IntactReact';
+    const propTypes = type.propTypes;
+    if (isIntact) {
+        delete type.propTypes;
+    }
+    const element = _createElement.apply(this, arguments);
+    if (isIntact && propTypes) {
+        element.type.propTypes = propTypes;
+    }
+    return element;
+};
 
 class InheritIntactReact extends Intact {
     constructor(props) {
@@ -128,7 +142,7 @@ function conversionChildrenBlocks(children) {
         if (isStringOrNumber(child)) {
             vNode = new VNode(Types.Text, null, {}, child);
         } else if (isObject(child) && child.$$typeof === REACT_ELEMENT_TYPE) {
-            let props = conversionProps(extend({}, child.attributes, child.props));
+            let props = conversionProps(extend({}, child.attributes, {key: child.key, ref: child.ref}, child.props));
             let type = child.type;
             if (isReactComponent(type)) {
                 InheritIntactReact.Ctor = child.type;
@@ -177,30 +191,35 @@ function conversionChildrenBlocks(children) {
 
 
 function isEvent(props, key) {
-    if (isFunction(props[key]) && /^on[A-Z]/.test(key)) {
+    if (isFunction(props[key]) && /^evChanged?-?/.test(key)) {
         return true
     }
     return false;
 }
 
 
-function conversionProps(props, init) {
+function conversionProps(props) {
     for (let key in props) {
         if (hasOwn.call(props, key)) {
             //兼容 事件类型
             if (isEvent(props, key)) {
-                const evEvent = `ev-${key.replace(/^on([A-Z].*)$/, "$1").toLowerCase()}`;
+                const evEvent = `ev-${key.replace(/^evChange(d?)-?(.*)$/, (text, $1, $2) => {
+                    if ($2) {
+                        return `$change${$1}:${$2}`
+                    }
+                    return `$change${$1}`
+                })}`;
                 props[evEvent] = props[key];
                 delete props[key];
             }
             //兼容 react 支持obj类型的ref
-            if (key === 'ref' && _.isObject(props[key])) {
+            if (key === 'ref' && isObject(props[key])) {
                 props[key] = (i) => {
                     props[key].current = i
                 }
             }
             //兼容 children 到 intact 类型
-            if (key === 'children' && props['children'] && init !== false) {
+            if (key === 'children' && props['children']) {
                 let {children, _blocks} = conversionChildrenBlocks(props['children']);
                 props['children'] = children;
                 props['_blocks'] = _blocks;

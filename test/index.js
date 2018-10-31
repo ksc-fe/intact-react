@@ -3,6 +3,13 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 
 import {Button, ButtonGroup} from 'kpc/components/button';
+import {Table, TableColumn} from 'kpc/components/table';
+import {Dropdown, DropdownMenu, DropdownItem} from 'kpc/components/dropdown';
+import ScrollSelect from 'kpc/components/scrollSelect';
+
+
+const scheme = {a: '表头1', b: '表头2'};
+const data = [{a: '第一行', b: '哈哈2'}, {a: '第二行', b: '哈哈2'}];
 
 const h = React.createElement;
 
@@ -287,24 +294,117 @@ describe('Unit test', () => {
         it('render button', (done) => {
             const container10 = document.createElement('div');
             document.body.appendChild(container10);
-            const component = h(Functional,
-                {id: 'react5'},
-                [
-                    h(ButtonGroup, {key: 1},
-                        [
-                            h(Button, {
-                                key: 1, onClick: () => {
-                                    console.log('======')
-                                }
-                            }, '这是一个按钮1'),
-                            h(Button, {key: 2}, '这是一个按钮2')
-                        ]
-                    )
-                ])
+            // const component = h(Functional,
+            //     {id: 'react5'},
+            //     [
+            //         h(ButtonGroup, {key: 1},
+            //             [
+            //                 h(Button, {
+            //                     key: 1, onClick: () => {
+            //                         console.log('======')
+            //                     }
+            //                 }, '这是一个按钮1'),
+            //                 h(Button, {key: 2}, '这是一个按钮2')
+            //             ]
+            //         )
+            //     ])
+            let component = <Functional id="react8">
+                <ButtonGroup key={1}>
+                    <Button onClick={(e) => {
+                        console.log('==', e)
+                    }}>
+                        这是一个按钮1
+                    </Button>
+                    <Button key={3}>
+                        这是一个按钮2
+                    </Button>
+                    <Button key={3}>
+                        这是一个按钮3
+                    </Button>
+                </ButtonGroup>
+                <ButtonGroup key={2}>
+                    <Button onClick={(e) => {
+                        console.log('==', e)
+                    }}>
+                        这是一个按钮1
+                    </Button>
+                    <Button key={3}>
+                        这是一个按钮2
+                    </Button>
+                    <Button key={3}>
+                        这是一个按钮3
+                    </Button>
+                </ButtonGroup>
+                <div>
+                    <Table key={2} data={data} resizable>
+                        <TableColumn key="a" title="表头1"/>
+                        <TableColumn key="b" title="表头2"/>
+                    </Table>
+                    <div>
+                        <Dropdown>
+                            <Button type="primary">
+                                hover <i className="k-icon ion-arrow-down-b"></i>
+                            </Button>
+                            <DropdownMenu>
+                                <DropdownItem>item 1</DropdownItem>
+                                <DropdownItem>item 2</DropdownItem>
+                                <DropdownItem>item 3</DropdownItem>
+                            </DropdownMenu>
+                        </Dropdown>
+                    </div>
+                </div>
+            </Functional>
+            // component = h(Functional, {id: 'react5'}, [h(ButtonGroup, {}, [h(Button, {}, '这是一个按钮1'), h(Button, {}, '这是一个按钮2')])])
             ReactDOM.render(
                 component,
-                container10)
-            done()
+                container10, () => {
+                    container10.appendChild(br.cloneNode())
+                    done()
+                })
+
+        })
+        it('render ScrollSelect', (done) => {
+            const container11 = document.createElement('div');
+            document.body.appendChild(container11);
+
+            class S extends React.Component {
+                constructor(props) {
+                    super(props)
+                    const start = 1 - 5;
+                    this.state = {
+                        name: 1,
+                        select: '', list: Array.apply(null, {length: 10})
+                            .map((v, i) => {
+                                const year = start + i;
+                                return {
+                                    label: `${year}年`,
+                                    value: year
+                                };
+                            })
+                    }
+                }
+
+                render() {
+                    return <ScrollSelect
+                        data={this.state.list}
+                        value={this.state.name}
+                        evChange-value={(c, v) => {
+                            console.log('=====', v)
+                            this.setState({name: v})
+                        }}
+                    />
+                }
+            }
+
+            const component = <S></S>
+            ReactDOM.render(
+                component,
+                container11,
+                () => {
+                    container11.appendChild(br.cloneNode())
+                    done()
+                })
+
         })
     })
 })

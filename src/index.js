@@ -5,22 +5,16 @@ import {conversionProps} from './util'
 
 const {get, set, extend, isObject, isArray, create, isFunction} = Intact.utils;
 
-const _createElement = React.createElement;
-React.createElement = function createElementWithValidation(type, props, children) {
-    const isIntact = isObject(type.prototype) && type.prototype.$$cid === 'IntactReact';
-    const propTypes = type.propTypes;
-    if (isIntact) {
-        delete type.propTypes;
-    }
-    const element = _createElement.call(this, type, props, children);
-    if (isIntact && propTypes) {
-        type.propTypes = propTypes;
-    }
-    return element;
-};
-
 
 class IntactReact extends Intact {
+    static functionalWrapper(Wrapper) {
+        return class FunctionalClass extends IntactReact {
+            template(data) {
+                return Wrapper(data.props, true);
+            }
+        }
+    }
+
     constructor(...args) {
         const isReactCall = args.length === 2; //react 实例化是会传入两个参数  , 故使用此判断 是否为react 调用实例
         super(...args);
@@ -44,6 +38,7 @@ class IntactReact extends Intact {
             this.$$innerInstance.init(),
             this.$$wrapDom
         );
+        this.$$innerInstance.mount();
     }
 
     componentWillUnmount() {

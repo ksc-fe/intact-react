@@ -78,6 +78,7 @@ ReactDOM.render(
 
 
 ### 注意
+- **`intact` 对应的 `$change:value` 使用react props `evChange-value`,对应的 `$changed:value` 使用 react props `evChanged-value` , `$change`==>`evChange`  `$changed`==>`evChanged`
 - **不支持`ReactDOMServer` , 不支持`ReactDOM.hydrate`,  不支持`ReactDOM.findDOMNode` 请使用ref 代替**
 - **intact 内部 的react 组件render 只支持返回一个节点 , 多节点将会报错**
 - **react 添加 slot 支持 , children 的 props 属性上添加`slot` 将对应 intact 内部的`<b:block></b:block>` , 详细可参见test 目录下的测试用例**
