@@ -197,6 +197,12 @@ function isEvent(props, key) {
     return false;
 }
 
+function isReactEvent(props, key) {
+    if (isFunction(props[key]) && /^on[A-Z]/.test(key)) {
+        return true
+    }
+    return false;
+}
 
 function conversionProps(props) {
     for (let key in props) {
@@ -209,6 +215,11 @@ function conversionProps(props) {
                     }
                     return `$change${$1}`
                 })}`;
+                props[evEvent] = props[key];
+                delete props[key];
+            }
+            if (isReactEvent(props, key)) {
+                const evEvent = `ev-${key.replace(/^on([A-Z].*)$/, "$1").toLowerCase()}`;
                 props[evEvent] = props[key];
                 delete props[key];
             }
