@@ -1,1 +1,429 @@
-exports.Intact=function(e){var t={};function n(r){if(t[r])return t[r].exports;var o=t[r]={i:r,l:!1,exports:{}};return e[r].call(o.exports,o,o.exports,n),o.l=!0,o.exports}return n.m=e,n.c=t,n.d=function(e,t,r){n.o(e,t)||Object.defineProperty(e,t,{enumerable:!0,get:r})},n.r=function(e){"undefined"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(e,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(e,"__esModule",{value:!0})},n.t=function(e,t){if(1&t&&(e=n(e)),8&t)return e;if(4&t&&"object"==typeof e&&e&&e.__esModule)return e;var r=Object.create(null);if(n.r(r),Object.defineProperty(r,"default",{enumerable:!0,value:e}),2&t&&"string"!=typeof e)for(var o in e)n.d(r,o,function(t){return e[t]}.bind(null,o));return r},n.n=function(e){var t=e&&e.__esModule?function(){return e.default}:function(){return e};return n.d(t,"a",t),t},n.o=function(e,t){return Object.prototype.hasOwnProperty.call(e,t)},n.p="",n(n.s=2)}([function(e,t){e.exports=require("react")},function(e,t){e.exports=require("intact/dist")},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0});var r=n(3);Object.defineProperty(t,"default",{enumerable:!0,get:function(){return function(e){return e&&e.__esModule?e:{default:e}}(r).default}}),e.exports=t.default},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0});var r=function(){function e(e,t){for(var n=0;n<t.length;n++){var r=t[n];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,r.key,r)}}return function(t,n,r){return n&&e(t.prototype,n),r&&e(t,r),t}}(),o=c(n(0)),i=c(n(1)),u=n(4);function c(e){return e&&e.__esModule?e:{default:e}}function a(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}function s(e,t){if(!e)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return!t||"object"!=typeof t&&"function"!=typeof t?e:t}function p(e,t){if("function"!=typeof t&&null!==t)throw new TypeError("Super expression must either be null or a function, not "+typeof t);e.prototype=Object.create(t&&t.prototype,{constructor:{value:e,enumerable:!1,writable:!0,configurable:!0}}),t&&(Object.setPrototypeOf?Object.setPrototypeOf(e,t):e.__proto__=t)}var l=i.default.utils,f=(l.get,l.set,l.extend),d=(l.isObject,l.isArray,l.create,l.isFunction,function(e){function t(){var e;a(this,t);for(var n=arguments.length,r=Array(n),o=0;o<n;o++)r[o]=arguments[o];var i=2===r.length,u=s(this,(e=t.__proto__||Object.getPrototypeOf(t)).call.apply(e,[this].concat(r)));return i&&(u.$$innerInstance=void 0,u.props=r[0],u.$$wrapDom=null,u.$$props=f({},u.props)),u}return p(t,i.default),r(t,null,[{key:"functionalWrapper",value:function(e){return function(n){function o(){return a(this,o),s(this,(o.__proto__||Object.getPrototypeOf(o)).apply(this,arguments))}return p(o,t),r(o,[{key:"template",value:function(t){return e(t.props,!0)}}]),o}()}}]),r(t,[{key:"componentDidMount",value:function(){var e=this.$$wrapDom.parentElement;this.$$innerInstance=new this.constructor((0,u.conversionProps)(this.$$props)),e.replaceChild(this.$$innerInstance.init(),this.$$wrapDom),this.$$innerInstance.mount()}},{key:"componentWillUnmount",value:function(){this.$$innerInstance&&this.$$innerInstance.destroy()}},{key:"componentDidUpdate",value:function(e,t,n){this.$$innerInstance&&this.$$innerInstance.set((0,u.conversionProps)(this.$$props))}},{key:"render",value:function(){var e=this;return this.$$props=f(this.$$props,this.props),o.default.createElement("i",f({},{ref:function(t){e.$$wrapDom=t}}),"")}},{key:"$$cid",get:function(){return"IntactReact"}},{key:"isMounted",get:function(){return this.mounted}},{key:"isReactComponent",get:function(){return{}}}]),t}());t.default=d,e.exports=t.default},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.conversionProps=void 0;var r=function(){function e(e,t){for(var n=0;n<t.length;n++){var r=t[n];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,r.key,r)}}return function(t,n,r){return n&&e(t.prototype,n),r&&e(t,r),t}}(),o=u(n(1)),i=u(n(0));function u(e){return e&&e.__esModule?e:{default:e}}var c=o.default.Vdt.miss.h,a=o.default.Vdt.miss.Types,s=o.default.Vdt.miss.VNode,p=o.default.utils,l=p.each,f=p.isFunction,d=(p.isString,p.isArray),h=p.isObject,y=p.hasOwn,v=(p.create,p.extend),m=p.isStringOrNumber,b="function"==typeof Symbol&&Symbol.for?Symbol.for("react.element"):60103,$=i.default.createElement;i.default.createElement=function(e,t,n){var r=h(e.prototype)&&"IntactReact"===e.prototype.$$cid,o=e.propTypes;r&&delete e.propTypes;var i=$.apply(this,arguments);return r&&o&&(i.type.propTypes=o),i};var _=function(e){function t(e){!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,t);var n=function(e,t){if(!e)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return!t||"object"!=typeof t&&"function"!=typeof t?e:t}(this,(t.__proto__||Object.getPrototypeOf(t)).call(this,e));n.$$ctor=t.Ctor,n.instance=new n.$$ctor(e);var r=["constructor","props","_create","_mount","_beforeUpdate","_update","_destory","defaults","template","setState","forceUpdate"],o=n.instance,i=Object.getOwnPropertyNames(o.__proto__);i=i.concat(Object.getOwnPropertyNames(o));var u=!0,c=!1,a=void 0;try{for(var s,p=i[Symbol.iterator]();!(u=(s=p.next()).done);u=!0){var l=s.value;r.includes(l)||(f(o[l])?n[l]=o[l].bind(n):n[l]=o[l])}}catch(e){c=!0,a=e}finally{try{!u&&p.return&&p.return()}finally{if(c)throw a}}return n}return function(e,t){if("function"!=typeof t&&null!==t)throw new TypeError("Super expression must either be null or a function, not "+typeof t);e.prototype=Object.create(t&&t.prototype,{constructor:{value:e,enumerable:!1,writable:!0,configurable:!0}}),t&&(Object.setPrototypeOf?Object.setPrototypeOf(e,t):e.__proto__=t)}(t,o.default),r(t,[{key:"_create",value:function(){this.$$ctor.getDerivedStateFromProps&&this.$$ctor.getDerivedStateFromProps(),this.componentWillMount&&this.componentWillMount()}},{key:"_mount",value:function(){this.componentDidMount&&this.componentDidMount()}},{key:"_beforeUpdate",value:function(){this.$$ctor.getDerivedStateFromProps&&this.$$ctor.getDerivedStateFromProps(),this.componentWillReceiveProps&&this.componentWillReceiveProps(),this.componentWillUpdate&&this.componentWillUpdate(),this.shouldComponentUpdate&&this.shouldComponentUpdate()}},{key:"_update",value:function(){this.getSnapshotBeforeUpdate&&this.getSnapshotBeforeUpdate(),this.componentDidUpdate&&this.componentDidUpdate()}},{key:"_destory",value:function(){this.componentWillUnmount&&this.componentWillUnmount()}},{key:"defaults",value:function(){return t.Ctor.props}},{key:"template",value:function(e,t,n,r){var o=this.data,i=g(o.instance.render.apply(o)).children;if(i.length>1)throw new Error("children must return only one"+i);var u=i;return u.children=u.props.children,u}},{key:"setState",value:function(e,t){this.state=e,this.set({state:e}),f(t)&&t.apply(this)}},{key:"forceUpdate",value:function(e){this.update(),f(e)&&e.apply(this)}}]),t}();function g(e){if(!e)return{children:e,_blocks:{}};d(e)||(e=[e]);var t=[],n={};return l(e,function(e){if(e){var r=e;if(m(e))r=new s(a.Text,null,{},e);else if(h(e)&&e.$$typeof===b){var o=O(v({},e.attributes,{key:e.key,ref:e.ref},e.props)),i=e.type;!function(e){return f(e)&&e.prototype.render&&e.prototype.isReactComponent&&"IntactReact"!==e.prototype.$$cid}(i)?function(e){return f(e)&&"IntactReact"!==e.prototype.$$cid}(i)&&(i=function(t){var n=g(e.type(t)).children;if(n.length>1)throw new Error("children must return only one"+n);var r=n;return r.children=r.props.children,r}):(_.Ctor=e.type,_.Ctor.props=o,i=_),r=c(i,o,o.children,null,e.key,e.ref)}if(h(r.props)&&r.props.slot){var u=void 0===r.props.slot||!0===r.props.slot?"default":r.props.slot;delete r.props.slot,n[u]=function(e){return r.children=r.props.children,r}}else t.push(r)}}),1===t.length&&(t=t[0]),{children:t,_blocks:n}}function O(e){var t=function(t){if(y.call(e,t)){if(function(e,t){return!(!f(e[t])||!/^evChanged?-?/.test(t))}(e,t)){var n="ev-"+t.replace(/^evChange(d?)-?(.*)$/,function(e,t,n){return n?"$change"+t+":"+n:"$change"+t});e[n]=e[t],delete e[t]}if(function(e,t){return!(!f(e[t])||!/^on[A-Z]/.test(t))}(e,t)){var r="ev-"+t.replace(/^on([A-Z].*)$/,"$1").toLowerCase();e[r]=e[t],delete e[t]}if("ref"===t&&h(e[t])&&(e[t]=function(n){e[t].current=n}),"children"===t&&e.children){var o=g(e.children),i=o.children,u=o._blocks;e.children=i,e._blocks=u}}};for(var n in e)t(n);return e}t.conversionProps=O}]);
+'use strict';
+
+function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
+
+var React = _interopDefault(require('react'));
+var Intact = _interopDefault(require('intact/dist'));
+
+var classCallCheck = function (instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
+};
+
+var createClass = function () {
+  function defineProperties(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];
+      descriptor.enumerable = descriptor.enumerable || false;
+      descriptor.configurable = true;
+      if ("value" in descriptor) descriptor.writable = true;
+      Object.defineProperty(target, descriptor.key, descriptor);
+    }
+  }
+
+  return function (Constructor, protoProps, staticProps) {
+    if (protoProps) defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) defineProperties(Constructor, staticProps);
+    return Constructor;
+  };
+}();
+
+
+
+
+
+
+
+
+
+var inherits = function (subClass, superClass) {
+  if (typeof superClass !== "function" && superClass !== null) {
+    throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
+  }
+
+  subClass.prototype = Object.create(superClass && superClass.prototype, {
+    constructor: {
+      value: subClass,
+      enumerable: false,
+      writable: true,
+      configurable: true
+    }
+  });
+  if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+};
+
+
+
+
+
+
+
+
+
+
+
+var possibleConstructorReturn = function (self, call) {
+  if (!self) {
+    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+  }
+
+  return call && (typeof call === "object" || typeof call === "function") ? call : self;
+};
+
+var h = Intact.Vdt.miss.h;
+var Types = Intact.Vdt.miss.Types;
+var VNode = Intact.Vdt.miss.VNode;
+var _Intact$utils$1 = Intact.utils;
+var each = _Intact$utils$1.each;
+var isFunction$1 = _Intact$utils$1.isFunction;
+var isString = _Intact$utils$1.isString;
+var isArray$1 = _Intact$utils$1.isArray;
+var isObject$1 = _Intact$utils$1.isObject;
+var hasOwn = _Intact$utils$1.hasOwn;
+var create$1 = _Intact$utils$1.create;
+var extend$1 = _Intact$utils$1.extend;
+var isStringOrNumber = _Intact$utils$1.isStringOrNumber;
+
+//from react16 2456 行
+
+var hasSymbol = typeof Symbol === 'function' && Symbol.for;
+var REACT_ELEMENT_TYPE = hasSymbol ? Symbol.for('react.element') : 0xeac7;
+
+var _createElement = React.createElement;
+React.createElement = function createElementWithValidation(type, props, children) {
+    var isIntact = isObject$1(type.prototype) && type.prototype.$$cid === 'IntactReact';
+    var propTypes = type.propTypes;
+    if (isIntact) {
+        delete type.propTypes;
+    }
+    var element = _createElement.apply(this, arguments);
+    if (isIntact && propTypes) {
+        element.type.propTypes = propTypes;
+    }
+    return element;
+};
+
+var InheritIntactReact = function (_Intact) {
+    inherits(InheritIntactReact, _Intact);
+
+    function InheritIntactReact(props) {
+        classCallCheck(this, InheritIntactReact);
+
+        var _this = possibleConstructorReturn(this, _Intact.call(this, props));
+
+        _this.$$ctor = InheritIntactReact.Ctor;
+        _this.instance = new _this.$$ctor(props);
+        var ignoreKeys = ['constructor', 'props', '_create', '_mount', '_beforeUpdate', '_update', '_destory', 'defaults', 'template', 'setState', 'forceUpdate'];
+        var instance = _this.instance;
+        var keys = Object.getOwnPropertyNames(instance.__proto__);
+        keys = keys.concat(Object.getOwnPropertyNames(instance));
+        for (var _iterator = keys, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
+            var _ref;
+
+            if (_isArray) {
+                if (_i >= _iterator.length) break;
+                _ref = _iterator[_i++];
+            } else {
+                _i = _iterator.next();
+                if (_i.done) break;
+                _ref = _i.value;
+            }
+
+            var key = _ref;
+
+            if (!ignoreKeys.includes(key)) {
+                if (isFunction$1(instance[key])) {
+                    _this[key] = instance[key].bind(_this);
+                } else {
+                    _this[key] = instance[key];
+                }
+            }
+        }
+        return _this;
+    }
+
+    InheritIntactReact.prototype._create = function _create() {
+        this.$$ctor.getDerivedStateFromProps && this.$$ctor.getDerivedStateFromProps();
+        this.componentWillMount && this.componentWillMount();
+    };
+
+    InheritIntactReact.prototype._mount = function _mount() {
+        this.componentDidMount && this.componentDidMount();
+    };
+
+    InheritIntactReact.prototype._beforeUpdate = function _beforeUpdate() {
+        this.$$ctor.getDerivedStateFromProps && this.$$ctor.getDerivedStateFromProps();
+        this.componentWillReceiveProps && this.componentWillReceiveProps();
+        this.componentWillUpdate && this.componentWillUpdate();
+        this.shouldComponentUpdate && this.shouldComponentUpdate();
+    };
+
+    InheritIntactReact.prototype._update = function _update() {
+        this.getSnapshotBeforeUpdate && this.getSnapshotBeforeUpdate();
+        this.componentDidUpdate && this.componentDidUpdate();
+    };
+
+    InheritIntactReact.prototype._destory = function _destory() {
+        this.componentWillUnmount && this.componentWillUnmount();
+    };
+
+    InheritIntactReact.prototype.defaults = function defaults$$1() {
+        return InheritIntactReact.Ctor.props;
+    };
+
+    InheritIntactReact.prototype.template = function template(obj, _Vdt, blocks, $callee) {
+        var self = this.data;
+
+        var _conversionChildrenBl = conversionChildrenBlocks(self.instance.render.apply(self)),
+            children = _conversionChildrenBl.children;
+
+        if (children.length > 1) {
+            throw new Error('children must return only one' + children);
+        }
+        var vNode = children;
+        vNode.children = vNode.props.children;
+        return vNode;
+    };
+
+    InheritIntactReact.prototype.setState = function setState(state, callback) {
+        this.state = state;
+        this.set({ state: state });
+        isFunction$1(callback) && callback.apply(this);
+    };
+
+    InheritIntactReact.prototype.forceUpdate = function forceUpdate(callback) {
+        this.update();
+        isFunction$1(callback) && callback.apply(this);
+    };
+
+    return InheritIntactReact;
+}(Intact);
+
+function isReactComponent(type) {
+    return isFunction$1(type) && type.prototype.render && type.prototype.isReactComponent && type.prototype.$$cid !== 'IntactReact';
+}
+
+function isReactFunctional(type) {
+    return isFunction$1(type) && type.prototype.$$cid !== 'IntactReact';
+}
+
+function conversionChildrenBlocks(children) {
+    if (!children) {
+        return {
+            children: children,
+            _blocks: {}
+        };
+    }
+    if (!isArray$1(children)) {
+        children = [children];
+    }
+    var newChildren = [];
+    var newBlocks = {};
+
+    each(children, function (child) {
+        if (!child) {
+            return;
+        }
+        var vNode = child;
+        if (isStringOrNumber(child)) {
+            vNode = new VNode(Types.Text, null, {}, child);
+        } else if (isObject$1(child) && child.$$typeof === REACT_ELEMENT_TYPE) {
+            var props = conversionProps(extend$1({}, child.attributes, { key: child.key, ref: child.ref }, child.props));
+            var type = child.type;
+            if (isReactComponent(type)) {
+                InheritIntactReact.Ctor = child.type;
+                InheritIntactReact.Ctor.props = props;
+                type = InheritIntactReact;
+            } else if (isReactFunctional(type)) {
+                type = function type(props) {
+                    var _children = child.type(props);
+
+                    var _conversionChildrenBl2 = conversionChildrenBlocks(_children),
+                        children = _conversionChildrenBl2.children;
+
+                    if (children.length > 1) {
+                        throw new Error('children must return only one' + children);
+                    }
+                    var vNode = children;
+                    vNode.children = vNode.props.children;
+                    return vNode;
+                };
+            }
+            vNode = h(type, props, props.children, null, child.key, child.ref);
+        }
+        if (isObject$1(vNode.props) && vNode.props.slot) {
+            var slotName = vNode.props.slot === undefined || vNode.props.slot === true ? 'default' : vNode.props.slot;
+            delete vNode.props.slot;
+            newBlocks[slotName] = function (parent) {
+                vNode.children = vNode.props.children;
+                return vNode;
+            };
+        } else {
+            newChildren.push(vNode);
+        }
+    });
+    if (newChildren.length === 1) {
+        newChildren = newChildren[0];
+    }
+    return {
+        children: newChildren,
+        _blocks: newBlocks
+    };
+}
+
+function isEvent(props, key) {
+    if (isFunction$1(props[key]) && /^evChanged?-?/.test(key)) {
+        return true;
+    }
+    return false;
+}
+
+function isReactEvent(props, key) {
+    if (isFunction$1(props[key]) && /^on[A-Z]/.test(key)) {
+        return true;
+    }
+    return false;
+}
+
+function conversionProps(props) {
+    var _loop = function _loop(key) {
+        if (hasOwn.call(props, key)) {
+            //兼容 事件类型
+            if (isEvent(props, key)) {
+                var evEvent = 'ev-' + key.replace(/^evChange(d?)-?(.*)$/, function (text, $1, $2) {
+                    if ($2) {
+                        return '$change' + $1 + ':' + $2;
+                    }
+                    return '$change' + $1;
+                });
+                props[evEvent] = props[key];
+                delete props[key];
+            }
+            if (isReactEvent(props, key)) {
+                var _evEvent = 'ev-' + key.replace(/^on([A-Z].*)$/, "$1").toLowerCase();
+                props[_evEvent] = props[key];
+                delete props[key];
+            }
+            //兼容 react 支持obj类型的ref
+            if (key === 'ref' && isObject$1(props[key])) {
+                props[key] = function (i) {
+                    props[key].current = i;
+                };
+            }
+            //兼容 children 到 intact 类型
+            if (key === 'children' && props['children']) {
+                var _conversionChildrenBl3 = conversionChildrenBlocks(props['children']),
+                    children = _conversionChildrenBl3.children,
+                    _blocks = _conversionChildrenBl3._blocks;
+
+                props['children'] = children;
+                props['_blocks'] = _blocks;
+            }
+        }
+    };
+
+    for (var key in props) {
+        _loop(key);
+    }
+    return props;
+}
+
+// for webpack alias Intact to IntactReact
+var _Intact$utils = Intact.utils;
+var get = _Intact$utils.get;
+var set = _Intact$utils.set;
+var extend = _Intact$utils.extend;
+var isObject = _Intact$utils.isObject;
+var isArray = _Intact$utils.isArray;
+var create = _Intact$utils.create;
+var isFunction = _Intact$utils.isFunction;
+
+var IntactReact = function (_Intact) {
+    inherits(IntactReact, _Intact);
+
+    IntactReact.functionalWrapper = function functionalWrapper(Wrapper) {
+        return function (_IntactReact) {
+            inherits(FunctionalClass, _IntactReact);
+
+            function FunctionalClass() {
+                classCallCheck(this, FunctionalClass);
+                return possibleConstructorReturn(this, _IntactReact.apply(this, arguments));
+            }
+
+            FunctionalClass.prototype.template = function template(data) {
+                return Wrapper(data.props, true);
+            };
+
+            return FunctionalClass;
+        }(IntactReact);
+    };
+
+    function IntactReact() {
+        classCallCheck(this, IntactReact);
+
+        for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+            args[_key] = arguments[_key];
+        }
+
+        var isReactCall = args.length === 2; //react 实例化是会传入两个参数  , 故使用此判断 是否为react 调用实例
+
+        var _this = possibleConstructorReturn(this, _Intact.call.apply(_Intact, [this].concat(args)));
+
+        if (isReactCall) {
+            _this.$$innerInstance = undefined;
+            _this.props = args[0]; //react 需要验证props 全等 ,蛋疼
+            _this.$$wrapDom = null;
+            _this.$$props = extend({}, _this.props);
+        }
+        return _this;
+    }
+
+    IntactReact.prototype.componentDidMount = function componentDidMount() {
+        var parentElement = this.$$wrapDom.parentElement;
+        //重新初始化并创建节点 , 替换已存在节点
+        this.$$innerInstance = new this.constructor(conversionProps(this.$$props));
+        parentElement.replaceChild(this.$$innerInstance.init(), this.$$wrapDom);
+        this.$$innerInstance.mount();
+    };
+
+    IntactReact.prototype.componentWillUnmount = function componentWillUnmount() {
+        this.$$innerInstance && this.$$innerInstance.destroy();
+    };
+
+    IntactReact.prototype.componentDidUpdate = function componentDidUpdate(prevProps, prevState, snapshot) {
+        // 更新实例
+        this.$$innerInstance && this.$$innerInstance.set(conversionProps(this.$$props));
+    };
+
+    IntactReact.prototype.render = function render() {
+        var _this3 = this;
+
+        this.$$props = extend(this.$$props, this.props);
+        return React.createElement('i', extend({}, {
+            ref: function ref(element) {
+                _this3.$$wrapDom = element;
+            }
+        }), '');
+    };
+
+    createClass(IntactReact, [{
+        key: '$$cid',
+        get: function get() {
+            return 'IntactReact';
+        }
+    }, {
+        key: 'isMounted',
+        get: function get() {
+            return this.mounted;
+        }
+    }, {
+        key: 'isReactComponent',
+        get: function get() {
+            return {};
+        }
+    }]);
+    return IntactReact;
+}(Intact);
+
+module.exports = IntactReact;
