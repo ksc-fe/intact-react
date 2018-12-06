@@ -12,15 +12,16 @@ let REACT_ELEMENT_TYPE = hasSymbol ? Symbol.for('react.element') : 0xeac7;
 
 const _createElement = React.createElement;
 React.createElement = function createElementWithValidation(type, props, children) {
-    const isIntact = isObject(type.prototype) && type.prototype.$$cid === 'IntactReact';
+    const isIntact = type.prototype && type.prototype.$$cid === 'IntactReact';
     const propTypes = type.propTypes;
-    if (isIntact) {
-        delete type.propTypes;
+    if (isIntact && propTypes) {
+        type.propTypes = undefined;
     }
     const element = _createElement.apply(this, arguments);
     if (isIntact && propTypes) {
-        element.type.propTypes = propTypes;
+        type.propTypes = propTypes;
     }
+
     return element;
 };
 

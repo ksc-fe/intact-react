@@ -92,15 +92,16 @@ var REACT_ELEMENT_TYPE = hasSymbol ? Symbol.for('react.element') : 0xeac7;
 
 var _createElement = React.createElement;
 React.createElement = function createElementWithValidation(type, props, children) {
-    var isIntact = isObject$1(type.prototype) && type.prototype.$$cid === 'IntactReact';
+    var isIntact = type.prototype && type.prototype.$$cid === 'IntactReact';
     var propTypes = type.propTypes;
-    if (isIntact) {
-        delete type.propTypes;
+    if (isIntact && propTypes) {
+        type.propTypes = undefined;
     }
     var element = _createElement.apply(this, arguments);
     if (isIntact && propTypes) {
-        element.type.propTypes = propTypes;
+        type.propTypes = propTypes;
     }
+
     return element;
 };
 

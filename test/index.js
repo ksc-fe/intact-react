@@ -406,5 +406,39 @@ describe('Unit test', () => {
                 })
 
         })
+    });
+
+    describe('Test', () => {
+        let container;
+        beforeEach(() => {
+            container = document.createElement('div');
+            document.body.appendChild(container);
+        });
+
+        it('validate props in intact instead of react', () => {
+            const error = console.error;
+            console.error = sinon.spy((...args) => {
+                error.apply(console, args);
+            });
+            class IntactComponent extends Intact {
+                @Intact.template()
+                static template = `<div>test</div>`
+
+                static propTypes = {
+                    show: Boolean,
+                }
+            }
+            class IntactComponent2 extends IntactComponent {
+
+            }
+            ReactDOM.render(<div>
+                <IntactComponent />
+                <IntactComponent2 />
+            </div>, container);
+
+            expect(console.error.callCount).to.eql(0);
+
+            console.error = error;
+        });
     })
-})
+});
