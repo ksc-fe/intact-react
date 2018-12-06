@@ -8,10 +8,10 @@
     "test:cli": "KARMA_ENV=cli node ./node_modules/karma/bin/karma start karma.config.js",
     "build": "rollup -c rollup.config.node.js && rollup -c rollup.config.js && uglifyjs dist/intact.react.js -o dist/intact.react.min.js -m",
     "release": "npm run release-patch",
-    "prelease": "npm run build && git commit -am 'build...' &&  npm version prerelease && git push --tags --force && git push && npm publish",
-    "release-patch": "npm run build && git commit -am 'build...' &&  npm version patch && git push --tags && git push && npm publish",
-    "release-minor": "npm run build && git commit -am 'build...' &&  npm version minor && git push --tags && git push && npm publish",
-    "release-major": "npm run build && git commit -am 'build...' &&  npm version major && git push --tags && git push && npm publish"
+    "prelease": "npm run build && git commit -am 'build...';  npm version prerelease && git push --tags --force && git push && npm publish",
+    "release-patch": "npm run build && git commit -am 'build...'; npm version patch && git push --tags && git push && npm publish",
+    "release-minor": "npm run build && git commit -am 'build...';  npm version minor && git push --tags && git push && npm publish",
+    "release-major": "npm run build && git commit -am 'build...';  npm version major && git push --tags && git push && npm publish"
   },
   "repository": {
     "type": "git",
