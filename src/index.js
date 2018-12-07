@@ -1,76 +1,107 @@
 import React from 'react';
 // for webpack alias Intact to IntactReact
 import Intact from 'intact/dist';
-import {conversionProps} from './util'
+import {normalizeProps, functionalWrapper} from './util'
 
-const {get, set, extend, isObject, isArray, create, isFunction} = Intact.utils;
-
+const {noop} = Intact.utils;
 
 class IntactReact extends Intact {
-    static functionalWrapper(Wrapper) {
-        return class FunctionalClass extends IntactReact {
-            template(data) {
-                return Wrapper(data.props, true);
-            }
+    static functionalWrapper = functionalWrapper;
+
+    static $$cid = 'IntactReact';
+
+    constructor(props, context) {
+        // React will pass context to constructor 
+        if (context) {
+            const normalizedProps = normalizeProps(props, context);
+            super(normalizedProps);
+            // fake the vNode
+            this.vNode = {props: normalizeProps};
+            // We must keep the props to be undefined, 
+            // otherwise React will think it has mutated
+            this._props = this.props; 
+            delete this.props;
+            this._isReact = true;
+        } else {
+            super(props);
         }
     }
 
-    constructor(...args) {
-        const isReactCall = args.length === 2; //react 实例化是会传入两个参数  , 故使用此判断 是否为react 调用实例
-        super(...args);
-        if (isReactCall) {
-            this.$$innerInstance = undefined;
-            this.props = args[0];//react 需要验证props 全等 ,蛋疼
-            this.$$wrapDom = null;
-            this.$$props = extend({}, this.props);
+    get(...args) {
+        if (this._isReact) {
+            const props = this.props;
+            this.props = this._props;
+            const result = super.get(...args);
+            this.props = props;
+            return result;
+        } else {
+            return super.get(...args);
         }
     }
 
-    get $$cid() {
-        return 'IntactReact';
+    set(...args) {
+        if (this._isReact) {
+            const props = this.props;
+            this.props = this._props;
+            const result = super.set(...args);
+            this.props = props;
+            return result;
+        } else {
+            return super.set(...args);
+        }
     }
 
     componentDidMount() {
-        const parentElement = this.$$wrapDom.parentElement;
-        //重新初始化并创建节点 , 替换已存在节点
-        this.$$innerInstance = new this.constructor(conversionProps(this.$$props));
-        parentElement.replaceChild(
-            this.$$innerInstance.init(),
-            this.$$wrapDom
-        );
-        this.$$innerInstance.mount();
+        // disable intact async component
+        this.inited = true;
+        const dom = this.init();
+        const parentElement = this._placeholder.parentElement;
+        parentElement.replaceChild(dom, this._placeholder);
+        // persist the placeholder to let parentNode to remove the real dom
+        this._placeholder._realElement = dom;
+        if (!parentElement._hasRewrite) {
+            const removeChild = parentElement.removeChild;
+            parentElement.removeChild = function(child) {
+                removeChild.call(this, child._realElement || child);
+            }
+            parentElement._hasRewrite = true;
+        }
+        this.mount();
     }
 
     componentWillUnmount() {
-        this.$$innerInstance && this.$$innerInstance.destroy();
+        this.destroy();
     }
 
-    componentDidUpdate(prevProps, prevState, snapshot) {
-        // 更新实例
-        this.$$innerInstance && this.$$innerInstance.set(conversionProps(this.$$props));
+    componentDidUpdate() {
+        const vNode = {
+            props: normalizeProps(this.props, this.context)
+        };
+        const lastVNode = this.vNode;
+        this.vNode = vNode;
+
+        this.update(lastVNode, vNode);
     }
 
     render() {
-        this.$$props = extend(this.$$props, this.props);
-        return React.createElement(
-            'i',
-            extend({}, {
-                ref: (element) => {
-                    this.$$wrapDom = element
-                }
-            }),
-            '');
+        return React.createElement('i', {
+            ref: (element) => {
+                this._placeholder = element
+            }
+        });
     }
 
     get isMounted() {
         return this.mounted;
     }
-
-    get isReactComponent() {
-        return {}
-    }
-
 }
+
+// for workInProgress.tag detection 
+IntactReact.prototype.isReactComponent = {};
+// for getting _context in Intact
+IntactReact.contextTypes = {
+    _context: noop
+};
 
 export default IntactReact
 

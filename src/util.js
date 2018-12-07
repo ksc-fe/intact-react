@@ -1,18 +1,14 @@
 import Intact from 'intact/dist';
-import React from "react";
+import React from 'react';
+import ReactDOM from 'react-dom';
 
 const h = Intact.Vdt.miss.h;
-const Types = Intact.Vdt.miss.Types;
-const VNode = Intact.Vdt.miss.VNode;
-const {each, isFunction, isString, isArray, isObject, hasOwn, create, extend, isStringOrNumber} = Intact.utils;
+const {isFunction, isArray, isStringOrNumber, set, get} = Intact.utils;
 
-//from react16 2456 行
-let hasSymbol = typeof Symbol === 'function' && Symbol.for;
-let REACT_ELEMENT_TYPE = hasSymbol ? Symbol.for('react.element') : 0xeac7;
-
+// let React don't validate Intact component's props
 const _createElement = React.createElement;
 React.createElement = function createElementWithValidation(type, props, children) {
-    const isIntact = type.prototype && type.prototype.$$cid === 'IntactReact';
+    const isIntact = type.$$cid === 'IntactReact';
     const propTypes = type.propTypes;
     if (isIntact && propTypes) {
         type.propTypes = undefined;
@@ -25,223 +21,132 @@ React.createElement = function createElementWithValidation(type, props, children
     return element;
 };
 
-class InheritIntactReact extends Intact {
-    constructor(props) {
-        super(props);
-        this.$$ctor = InheritIntactReact.Ctor;
-        this.instance = new this.$$ctor(props);
-        const ignoreKeys = [
-            'constructor',
-            'props',
-            '_create',
-            '_mount',
-            '_beforeUpdate',
-            '_update',
-            '_destory',
-            'defaults',
-            'template',
-            'setState',
-            'forceUpdate',
-        ];
-        const instance = this.instance;
-        let keys = Object.getOwnPropertyNames(instance.__proto__);
-        keys = keys.concat(Object.getOwnPropertyNames(instance));
-        for (let key of keys) {
-            if (!ignoreKeys.includes(key)) {
-                if (isFunction(instance[key])) {
-                    this[key] = instance[key].bind(this);
-                } else {
-                    this[key] = instance[key];
-                }
-            }
-        }
+export function normalizeChildren(vNodes) {
+    if (isArray(vNodes)) {
+        return vNodes.map(vNode => normalize(vNode));
     }
-
-    _create() {
-        this.$$ctor.getDerivedStateFromProps && this.$$ctor.getDerivedStateFromProps();
-        this.componentWillMount && this.componentWillMount();
-    }
-
-    _mount() {
-        this.componentDidMount && this.componentDidMount();
-    }
-
-    _beforeUpdate() {
-        this.$$ctor.getDerivedStateFromProps && this.$$ctor.getDerivedStateFromProps();
-        this.componentWillReceiveProps && this.componentWillReceiveProps();
-        this.componentWillUpdate && this.componentWillUpdate();
-        this.shouldComponentUpdate && this.shouldComponentUpdate();
-    }
-
-    _update() {
-        this.getSnapshotBeforeUpdate && this.getSnapshotBeforeUpdate();
-        this.componentDidUpdate && this.componentDidUpdate()
-    }
-
-    _destory() {
-        this.componentWillUnmount && this.componentWillUnmount();
-
-    }
-
-    defaults() {
-        return InheritIntactReact.Ctor.props
-    }
-
-    template(obj, _Vdt, blocks, $callee) {
-        let self = this.data;
-        const {children} = conversionChildrenBlocks(self.instance.render.apply(self));
-        if (children.length > 1) {
-            throw new Error('children must return only one' + children);
-        }
-        const vNode = children;
-        vNode.children = vNode.props.children;
-        return vNode
-    }
-
-    setState(state, callback) {
-        this.state = state;
-        this.set({state});
-        isFunction(callback) && callback.apply(this);
-    }
-
-    forceUpdate(callback) {
-        this.update();
-        isFunction(callback) && callback.apply(this);
-    }
+    return normalize(vNodes);
 }
 
-function isReactComponent(type) {
-    return isFunction(type) &&
-        type.prototype.render &&
-        type.prototype.isReactComponent &&
-        type.prototype.$$cid !== 'IntactReact'
+export function normalize(vNode) {
+    if (vNode == null) return vNode;
+    // handle string and number by intact directly
+    if (isStringOrNumber(vNode)) return vNode;
+
+    return h(Wrapper, {reactVNode: vNode});
 }
 
-function isReactFunctional(type) {
-    return isFunction(type) &&
-        type.prototype.$$cid !== 'IntactReact'
-}
+export function normalizeProps(props, context) {
+    if (!props) return;
 
-function conversionChildrenBlocks(children) {
-    if (!children) {
-        return {
-            children,
-            _blocks: {}
-        }
-    }
-    if (!isArray(children)) {
-        children = [children]
-    }
-    let newChildren = []
-    let newBlocks = {}
-
-    each(children, (child) => {
-        if (!child) {
-            return
-        }
-        let vNode = child;
-        if (isStringOrNumber(child)) {
-            vNode = new VNode(Types.Text, null, {}, child);
-        } else if (isObject(child) && child.$$typeof === REACT_ELEMENT_TYPE) {
-            let props = conversionProps(extend({}, child.attributes, {key: child.key, ref: child.ref}, child.props));
-            let type = child.type;
-            if (isReactComponent(type)) {
-                InheritIntactReact.Ctor = child.type;
-                InheritIntactReact.Ctor.props = props;
-                type = InheritIntactReact;
-            } else if (isReactFunctional(type)) {
-                type = (props) => {
-                    const _children = child.type(props);
-                    const {children} = conversionChildrenBlocks(_children);
-                    if (children.length > 1) {
-                        throw new Error('children must return only one' + children);
-                    }
-                    const vNode = children;
-                    vNode.children = vNode.props.children;
-                    return vNode
-                }
-            }
-            vNode = h(
-                type,
-                props,
-                props.children,
-                null,
-                child.key,
-                child.ref
-            );
-        }
-        if (isObject(vNode.props) && vNode.props.slot) {
-            const slotName = (vNode.props.slot === undefined || vNode.props.slot === true) ? 'default' : vNode.props.slot;
-            delete vNode.props.slot;
-            newBlocks[slotName] = function (parent) {
-                vNode.children = vNode.props.children;
-                return vNode;
-            };
-        } else {
-            newChildren.push(vNode);
-        }
-    });
-    if (newChildren.length === 1) {
-        newChildren = newChildren[0]
-    }
-    return {
-        children: newChildren,
-        _blocks: newBlocks
-    };
-}
-
-
-function isEvent(props, key) {
-    if (isFunction(props[key]) && /^evChanged?-?/.test(key)) {
-        return true
-    }
-    return false;
-}
-
-function isReactEvent(props, key) {
-    if (isFunction(props[key]) && /^on[A-Z]/.test(key)) {
-        return true
-    }
-    return false;
-}
-
-function conversionProps(props) {
+    const _props = {};
+    const _blocks = _props._blocks = {};
+    let tmp;
     for (let key in props) {
-        if (hasOwn.call(props, key)) {
-            //兼容 事件类型
-            if (isEvent(props, key)) {
-                const evEvent = `ev-${key.replace(/^evChange(d?)-?(.*)$/, (text, $1, $2) => {
-                    if ($2) {
-                        return `$change${$1}:${$2}`
-                    }
-                    return `$change${$1}`
-                })}`;
-                props[evEvent] = props[key];
-                delete props[key];
-            }
-            if (isReactEvent(props, key)) {
-                const evEvent = `ev-${key.replace(/^on([A-Z].*)$/, "$1").toLowerCase()}`;
-                props[evEvent] = props[key];
-                delete props[key];
-            }
-            //兼容 react 支持obj类型的ref
-            if (key === 'ref' && isObject(props[key])) {
-                props[key] = (i) => {
-                    props[key].current = i
+        if (key === 'children') {
+            _props.children = normalizeChildren(props.children);
+        } else if ((tmp = getEventName(key))){
+            _props[tmp] = props[key];
+        } else if (key.substring(0, 2) === 'b-') {
+            // is a block
+            _blocks[key.substring(2)] = normalizeBlock(props[key]); 
+        } else {
+            _props[key] = props[key];
+        }
+    }
+
+    _props._context = normalizeContext(context);
+
+    return _props;
+}
+
+export function normalizeContext(context) {
+    const _context = context._context;
+    return {
+        data: {
+            get(name) {
+                if (name != null) {
+                    return get(_context.state, name);
+                } else {
+                    return _context.state;
                 }
-            }
-            //兼容 children 到 intact 类型
-            if (key === 'children' && props['children']) {
-                let {children, _blocks} = conversionChildrenBlocks(props['children']);
-                props['children'] = children;
-                props['_blocks'] = _blocks;
+            },
+
+            set(name, value) {
+                const state = {..._context.state};
+                set(state, name, value);
+                _context.setState(state);
             }
         }
     }
-    return props;
 }
 
+export function normalizeBlock(block) {
+    if (isFunction(block)) {
+        return function(parent, ...args) {
+            return normalizeChildren(block.apply(this, args));
+        }
+    } else {
+        return function() {
+            return normalizeChildren(block);
+        }
+    }
+}
 
-export {
-    conversionProps
+export function getEventName(propName) {
+    const [first, second, third] = propName;
+    let tmp;
+    if (first === 'o' && second === 'n') {
+        if (third === '$') {
+            // e.g. on$change-value
+            return `ev-$${propName.substring(3).replace(/\-/g, ':')}`;
+        } else if ((tmp = third.charCodeAt(0)) && tmp >= 65 && tmp <= 90) {
+            // e.g. onClick
+            return `ev-${propName.substring(2).toLowerCase()}`;
+        }
+    }
+}
+
+export function functionalWrapper(Component) {
+    function Ctor(props, context) {
+        if (context) {
+            // invoked by React
+            const vNodes = Component(normalizeProps(props, context), true);
+            if (isArray(vNodes)) {
+                return vNodes.map(vNode => {
+                    return normalizeIntactVNodeToReactVNode(vNode);
+                });
+            }
+            return normalizeIntactVNodeToReactVNode(vNodes);
+        } else {
+            // invoked by Intact
+            return Component(props);
+        }
+    }
+
+    return Ctor;
+}
+
+export function normalizeIntactVNodeToReactVNode(vNode) {
+    if (isStringOrNumber(vNode)) {
+        return vNode;
+    } else if (vNode) {
+        return React.createElement(vNode.tag, vNode.props, vNode.props.children || vNode.children);
+    }
+}
+
+class Wrapper {
+    init(lastVNode, nextVNode) {
+        const placeholder = document.createComment('');
+        const container = document.createDocumentFragment();
+        // addEventListner to document
+        const doc = container.ownerDocument;
+        container.addEventListener = (...args) => {
+            doc.addEventListener(...args)
+        };
+        ReactDOM.render(nextVNode.props.reactVNode, container, function() {
+            placeholder.parentNode.replaceChild(container, placeholder);
+        });
+        return placeholder;
+    }
 }
