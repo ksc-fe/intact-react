@@ -16,7 +16,7 @@ class IntactReact extends Intact {
             const normalizedProps = normalizeProps(props, context);
             super(normalizedProps);
             // fake the vNode
-            this.vNode = {props: normalizeProps};
+            this.vNode = {props: normalizedProps};
             // We must keep the props to be undefined, 
             // otherwise React will think it has mutated
             this._props = this.props; 
@@ -54,7 +54,7 @@ class IntactReact extends Intact {
     componentDidMount() {
         // disable intact async component
         this.inited = true;
-        const dom = this.init();
+        const dom = this.init(null, this.vNode);
         const parentElement = this._placeholder.parentElement;
         parentElement.replaceChild(dom, this._placeholder);
         // persist the placeholder to let parentNode to remove the real dom

@@ -23,6 +23,7 @@ baseWebpack.module.rules = baseWebpack.module.rules.concat([
 const webpack = {
     mode: 'development',
     module: baseWebpack.module,
+    // devtool: '#inline-source-map',
     resolve: {
         alias: {
             'intact$': path.resolve(__dirname, 'index.js'),

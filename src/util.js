@@ -137,16 +137,39 @@ export function normalizeIntactVNodeToReactVNode(vNode) {
 
 class Wrapper {
     init(lastVNode, nextVNode) {
-        const placeholder = document.createComment('');
-        const container = document.createDocumentFragment();
+        // react can use comment node as parent so long as its text like bellow
+        const placeholder = document.createComment(' react-mount-point-unstable ');
+        // const container = document.createDocumentFragment();
+        // const container = document.createElement('div');
+        // container.className = 'fake';
         // addEventListner to document
-        const doc = container.ownerDocument;
-        container.addEventListener = (...args) => {
-            doc.addEventListener(...args)
-        };
-        ReactDOM.render(nextVNode.props.reactVNode, container, function() {
-            placeholder.parentNode.replaceChild(container, placeholder);
+        // const doc = container.ownerDocument;
+        // container.addEventListener = (...args) => {
+            // doc.addEventListener(...args)
+        // };
+        ReactDOM.render(nextVNode.props.reactVNode, placeholder, function() {
+            // placeholder.parentNode.replaceChild(container, placeholder);
         });
+        this.placeholder = placeholder;
+        // this.container = container;
+        // return container;
         return placeholder;
+    }
+
+    update(lastVNode, nextVNode) {
+        console.log(arguments);
+        ReactDOM.render(nextVNode.props.reactVNode, this.placeholder);
+        // return this.container;
+        return this.placeholder;
+    }
+
+    destroy() {
+        // remove the placeholder after react has unmount it
+        const placeholder = this.placeholder;
+        placeholder._unmount = () => {
+            ReactDOM.render(null, placeholder, () => {
+                placeholder.parentNode.removeChild(placeholder);
+            });
+        }
     }
 }
