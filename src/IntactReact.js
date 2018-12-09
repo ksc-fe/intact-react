@@ -1,9 +1,13 @@
 import React from 'react';
 // for webpack alias Intact to IntactReact
 import Intact from 'intact/dist';
-import {normalizeProps, functionalWrapper} from './util'
+import {normalizeProps} from './normalize'
+import functionalWrapper from './functionalWrapper';
 
 const {noop} = Intact.utils;
+
+let activeInstance;
+let mountedQueue;
 
 class IntactReact extends Intact {
     static functionalWrapper = functionalWrapper;
@@ -52,8 +56,12 @@ class IntactReact extends Intact {
     }
 
     componentDidMount() {
+        const oldTriggerFlag = this._shouldTrigger;
+        this.__initMountedQueue();
+
         // disable intact async component
         this.inited = true;
+
         const dom = this.init(null, this.vNode);
         const parentElement = this._placeholder.parentElement;
         parentElement.replaceChild(dom, this._placeholder);
@@ -66,7 +74,14 @@ class IntactReact extends Intact {
             }
             parentElement._hasRewrite = true;
         }
-        this.mount();
+
+        // add mount lifecycle method to queue
+        this.mountedQueue.push(() => {
+            this.mount();
+        });
+
+        this.__triggerMountedQueue();
+        this._shouldTrigger = oldTriggerFlag;
     }
 
     componentWillUnmount() {
@@ -74,6 +89,9 @@ class IntactReact extends Intact {
     }
 
     componentDidUpdate() {
+        const oldTriggerFlag = this._shouldTrigger;
+        this.__initMountedQueue();
+
         const vNode = {
             props: normalizeProps(this.props, this.context)
         };
@@ -81,18 +99,45 @@ class IntactReact extends Intact {
         this.vNode = vNode;
 
         this.update(lastVNode, vNode);
+
+        this.__triggerMountedQueue();
+        this._shouldTrigger = oldTriggerFlag;
+    }
+
+    __ref(element) {
+        this._placeholder = element;
     }
 
     render() {
         return React.createElement('i', {
-            ref: (element) => {
-                this._placeholder = element
-            }
+            ref: this.__ref 
         });
     }
 
     get isMounted() {
         return this.mounted;
+    }
+
+    // we should promise that all intact components have been mounted
+    __initMountedQueue() {
+        this._shouldTrigger = false;
+        if (!mountedQueue || mountedQueue.done) {
+            this._shouldTrigger = true;
+            if (!this.mountedQueue || this.mountedQueue.done) {
+                this._initMountedQueue();
+            }
+            mountedQueue = this.mountedQueue;
+        } else {
+            this.mountedQueue = mountedQueue;
+        }
+    }
+
+    __triggerMountedQueue() {
+        if (this._shouldTrigger) {
+            this._triggerMountedQueue();
+            mountedQueue = null;
+            this._shouldTrigger = false;
+        }
     }
 }
 

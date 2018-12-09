@@ -32,6 +32,23 @@ describe('Unit test', function() {
         }
     }
 
+    const renderApp = (_render, state) => {
+        let instance;
+        class App extends React.Component {
+            constructor(props) {
+                super(props);
+                instance = this;
+                window.vm = instance;
+                this.state = state;
+            }
+            render() {
+                return _render.call(this);
+            }
+        }
+        render(<App />);
+        return instance;
+    }
+
     
     function expect(input) {
         if (typeof input === 'string') {
@@ -334,16 +351,179 @@ describe('Unit test', function() {
     });
 
     describe('Lifecycle', () => {
-        it('mount', () => {
+        it('lifecycle of intact in react', () => {
+            const _create = sinon.spy();
+            const _mount = sinon.spy();
+            const _update = sinon.spy();
+            const _destroy = sinon.spy();
             const C = createIntactComponent(
-                `<div>{self.get('children')}</div>`,
+                `<div>test</div>`,
                 {
-                    _mount() {
-                        console.log('mount');
-                    }
+                    _create,
+                    _mount,
+                    _update,
+                    _destroy,
                 }
             );
-            render(<div><C><C>test</C></C></div>);
+            const instance = renderApp(function() {
+                return <div>{this.state.show ? <C /> : undefined}</div>
+            }, {show: true});
+
+            // update
+            instance.setState({a: 1});
+            expect(_create.callCount).to.eql(1);
+            expect(_mount.callCount).to.eql(1);
+            expect(_update.callCount).to.eql(1);
+
+            // destroy
+            instance.setState({show: false});
+            expect(_destroy.callCount).to.eql(1);
+        });
+
+        it('lifecycle of react in intact', () => {
+            const getDerivedStateFromProps = sinon.spy(function(props) {
+                console.log('getDerivedStateFromProps');
+                return props;
+            });
+            const shouldComponentUpdate = sinon.spy(() => {
+                console.log('shouldComponentUpdate');
+                return true;
+            });
+            const getSnapshotBeforeUpdate = sinon.spy(() => {
+                console.log('getSnapshotBeforeUpdate');
+                return null;
+            });
+            const componentDidMount = sinon.spy(() => console.log('componentDidMount'));
+            const componentDidUpdate = sinon.spy(() => console.log('componentDidUpdate'));
+            const componentWillUnmount = sinon.spy(() => console.log('componentWillUnmount'));
+            class ReactComponent extends React.Component {
+                static getDerivedStateFromProps = getDerivedStateFromProps;
+                constructor(props) {
+                    super(props);
+                    this.state = {};
+                }
+                render() {
+                    return <div>{this.state.a}</div>
+                }
+            }
+            Object.assign(ReactComponent.prototype, {
+                shouldComponentUpdate,
+                getSnapshotBeforeUpdate,
+                componentDidMount,
+                componentDidUpdate,
+                componentWillUnmount,
+            });
+            const instance = renderApp(function() {
+                return <ChildrenIntactComponent>
+                    {this.state.a === 3 ? undefined : <ReactComponent a={this.state.a} />}
+                </ChildrenIntactComponent>
+            }, {a: 1});
+
+            expect(getDerivedStateFromProps.callCount).to.eql(1);
+            expect(componentDidMount.callCount).to.eql(1);
+
+            // update
+            instance.setState({a: 2});
+            expect(getDerivedStateFromProps.callCount).to.eql(2);
+            expect(componentDidMount.callCount).to.eql(1);
+            expect(shouldComponentUpdate.callCount).to.eql(1);
+            expect(getSnapshotBeforeUpdate.callCount).to.eql(1);
+            expect(componentDidUpdate.callCount).to.eql(1);
+
+            // destroy 
+            instance.setState({a: 3});
+            expect(componentWillUnmount.callCount).to.eql(1);
+        });
+
+        it('lifecycle of mount of nested intact component', () => {
+            const mount1 = sinon.spy(function() {
+                console.log(1);
+                expect(document.body.contains(this.element)).to.eql(true);
+                console.log(this.element.outerHTML);
+            });
+            const mount2 = sinon.spy(function() {
+                console.log(2);
+                expect(document.body.contains(this.element)).to.eql(true);
+                console.log(this.element.outerHTML);
+            });
+            const C = createIntactComponent(`<div>{self.get('children')}</div>`, {
+                _mount: mount1
+            });
+            const D = createIntactComponent(`<div>test</div>`, {
+                _mount: mount2
+            });
+            const instance = renderApp(function() {
+                return (
+                    <div className="a">
+                        <C>
+                            <div>
+                                <D />
+                            </div>
+                        </C>
+                    </div>
+                )
+            });
+            expect(mount1.callCount).to.eql(1);
+            expect(mount2.callCount).to.eql(1);
+            expect(mount2.calledAfter(mount1)).be.true;
+        });
+
+        it('lifecycle of componentDidMount of nested react component in intact component', () => {
+            const componentDidMount = sinon.spy(function() {
+                expect(document.body.contains(this.dom)).to.be.true;
+            });
+            class ReactComponent extends React.Component {
+                render() {
+                    return <div ref={i => this.dom = i}>test</div>
+                }
+            }
+            ReactComponent.prototype.componentDidMount = componentDidMount;
+            const instance = renderApp(function() {
+                return (
+                    <ChildrenIntactComponent>
+                        <div>
+                            <ReactComponent />
+                        </div>
+                    </ChildrenIntactComponent>
+                )
+            });
+            expect(componentDidMount.callCount).to.eql(1);
+        });
+
+        it('mount lifecycle of intact in intact template', () => {
+            const mount = sinon.spy(function() {
+                expect(document.body.contains(this.element)).to.be.true;
+            });
+            const C = createIntactComponent(`<D />`, {
+                _init() {
+                    this.D = D;
+                }
+            });
+            const D = createIntactComponent(`<div>test</div>`, {
+                _mount: mount
+            });
+            const instance = renderApp(function() {
+                return <C />
+            });
+            expect(mount.callCount).to.eql(1);
+        });
+
+        it('mount lifycycle of intact in react render method', () => {
+            const mount = sinon.spy(function() {
+                expect(document.body.contains(this.element)).to.be.true;
+            });
+            class C extends React.Component {
+                render() {
+                    return <D />
+                }
+            }
+            const D = createIntactComponent(`<div>test</div>`, {
+                _mount: mount
+            });
+            const instance = renderApp(function() {
+                return <C />
+            });
+            expect(mount.callCount).to.eql(1);
         });
     });
 });

@@ -2,7 +2,7 @@ const commonjs = require('rollup-plugin-commonjs');
 const babel = require('rollup-plugin-babel');
 
 module.exports = {
-    entry: 'src/index.js',
+    entry: 'index.js',
     dest: 'dist/intact.react.js',
     format: 'umd',
     moduleName: 'Intact',
