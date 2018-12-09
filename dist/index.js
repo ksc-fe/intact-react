@@ -4,6 +4,7 @@ function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'defau
 
 var React = _interopDefault(require('react'));
 var Intact = _interopDefault(require('intact/dist'));
+var ReactDOM = _interopDefault(require('react-dom'));
 
 var classCallCheck = function (instance, Constructor) {
   if (!(instance instanceof Constructor)) {
@@ -34,6 +35,20 @@ var createClass = function () {
 
 
 
+
+var _extends = Object.assign || function (target) {
+  for (var i = 1; i < arguments.length; i++) {
+    var source = arguments[i];
+
+    for (var key in source) {
+      if (Object.prototype.hasOwnProperty.call(source, key)) {
+        target[key] = source[key];
+      }
+    }
+  }
+
+  return target;
+};
 
 
 
@@ -71,28 +86,156 @@ var possibleConstructorReturn = function (self, call) {
   return call && (typeof call === "object" || typeof call === "function") ? call : self;
 };
 
-var h = Intact.Vdt.miss.h;
-var Types = Intact.Vdt.miss.Types;
-var VNode = Intact.Vdt.miss.VNode;
-var _Intact$utils$1 = Intact.utils;
-var each = _Intact$utils$1.each;
-var isFunction$1 = _Intact$utils$1.isFunction;
-var isString = _Intact$utils$1.isString;
-var isArray$1 = _Intact$utils$1.isArray;
-var isObject$1 = _Intact$utils$1.isObject;
-var hasOwn = _Intact$utils$1.hasOwn;
-var create$1 = _Intact$utils$1.create;
-var extend$1 = _Intact$utils$1.extend;
-var isStringOrNumber = _Intact$utils$1.isStringOrNumber;
+// make sure all mount/update lifecycle methods of children have completed
+var FakePromise = function () {
+    function FakePromise(callback) {
+        var _this = this;
 
-//from react16 2456 行
+        classCallCheck(this, FakePromise);
 
-var hasSymbol = typeof Symbol === 'function' && Symbol.for;
-var REACT_ELEMENT_TYPE = hasSymbol ? Symbol.for('react.element') : 0xeac7;
+        this.resolved = false;
+        this.callback = undefined;
+        callback.call(this, function () {
+            return _this.resolve();
+        });
+    }
 
+    FakePromise.prototype.resolve = function resolve() {
+        this.resolved = true;
+        this.callback && this.callback();
+    };
+
+    FakePromise.prototype.then = function then(cb) {
+        this.callback = cb;
+        if (this.resolved) {
+            this.callback();
+        }
+    };
+
+    return FakePromise;
+}();
+
+FakePromise.all = function (promises) {
+    var count = promises.length;
+    var resolvedCount = 0;
+    var callback = void 0;
+
+    promises.forEach(function (p) {
+        p.then(function () {
+            resolvedCount++;
+            if (count === resolvedCount) {
+                callback && callback();
+            }
+        });
+    });
+
+    return {
+        then: function then(cb) {
+            callback = cb;
+            if (!count) {
+                callback();
+            }
+        }
+    };
+};
+
+var promises = [];
+var stacks = [];
+function pushStack() {
+    stacks.push(promises);
+    promises = [];
+}
+function popStack() {
+    promises = stacks.pop();
+}
+
+// wrap the react element to render it by react self
+
+var Wrapper = function () {
+    function Wrapper() {
+        classCallCheck(this, Wrapper);
+    }
+
+    Wrapper.prototype.init = function init(lastVNode, nextVNode) {
+        // let the component destroy by itself
+        this.destroyed = true;
+        var vNode = this._addProps(nextVNode);
+
+        // react can use comment node as parent so long as its text like bellow
+        var placeholder = document.createComment(' react-mount-point-unstable ');
+        var promise = new FakePromise(function (resolve) {
+            // ReactDOM.render(nextVNode.props.reactVNode, placeholder, resolve);
+            ReactDOM.unstable_renderSubtreeIntoContainer(nextVNode.props.parentRef.instance, vNode, placeholder, resolve);
+        });
+        promises.push(promise);
+        this.placeholder = placeholder;
+        return placeholder;
+    };
+
+    Wrapper.prototype.update = function update(lastVNode, nextVNode) {
+        var _this = this;
+
+        var vNode = this._addProps(nextVNode);
+        var promise = new FakePromise(function (resolve) {
+            // ReactDOM.render(nextVNode.props.reactVNode, this.placeholder, resolve);
+            ReactDOM.unstable_renderSubtreeIntoContainer(nextVNode.props.parentRef.instance, vNode, _this.placeholder, resolve);
+        });
+        promises.push(promise);
+        return this.placeholder;
+    };
+
+    Wrapper.prototype.destroy = function destroy() {
+        // remove the placeholder after react has unmount it
+        var placeholder = this.placeholder;
+        placeholder._unmount = function () {
+            ReactDOM.render(null, placeholder, function () {
+                placeholder.parentNode.removeChild(placeholder);
+            });
+        };
+    };
+
+    // we can change props in intact, so we should sync the changes
+
+
+    Wrapper.prototype._addProps = function _addProps(vNode) {
+        // for Intact reusing the dom
+        this.vdt = { vNode: vNode };
+
+        var props = vNode.props;
+        // react vNode has been frozen, so we must clone it to change
+        var cloneVNode = void 0;
+        var _props = void 0;
+        for (var key in props) {
+            if (key === 'reactVNode' || key === 'parentRef') continue;
+            if (!cloneVNode) {
+                cloneVNode = _extends({}, props.reactVNode);
+                _props = cloneVNode.props = _extends({}, cloneVNode.props);
+            }
+            var prop = props[key];
+            // is event
+            if (key.substr(0, 3) === 'ev-') {
+                _props[eventsMap[key]] = prop;
+            } else {
+                _props[key] = prop;
+            }
+        }
+
+        return cloneVNode || props.reactVNode;
+    };
+
+    return Wrapper;
+}();
+
+var eventsMap = {
+    'ev-click': 'onClick',
+    'ev-mouseenter': 'onMouseEnter',
+    'ev-mouseleave': 'onMouseLeave'
+};
+
+// let React don't validate Intact component's props
 var _createElement = React.createElement;
-React.createElement = function createElementWithValidation(type, props, children) {
-    var isIntact = type.prototype && type.prototype.$$cid === 'IntactReact';
+function createElement(type, props, children) {
+    var isIntact = type.$$cid === 'IntactReact';
     var propTypes = type.propTypes;
     if (isIntact && propTypes) {
         type.propTypes = undefined;
@@ -103,328 +246,346 @@ React.createElement = function createElementWithValidation(type, props, children
     }
 
     return element;
-};
+}
 
-var InheritIntactReact = function (_Intact) {
-    inherits(InheritIntactReact, _Intact);
+React.createElement = createElement;
 
-    function InheritIntactReact(props) {
-        classCallCheck(this, InheritIntactReact);
+var h$1 = Intact.Vdt.miss.h;
+var _Intact$utils$1 = Intact.utils;
+var isFunction = _Intact$utils$1.isFunction;
+var isArray$1 = _Intact$utils$1.isArray;
+var isStringOrNumber = _Intact$utils$1.isStringOrNumber;
+var _set = _Intact$utils$1.set;
+var _get = _Intact$utils$1.get;
 
-        var _this = possibleConstructorReturn(this, _Intact.call(this, props));
 
-        _this.$$ctor = InheritIntactReact.Ctor;
-        _this.instance = new _this.$$ctor(props);
-        var ignoreKeys = ['constructor', 'props', '_create', '_mount', '_beforeUpdate', '_update', '_destory', 'defaults', 'template', 'setState', 'forceUpdate'];
-        var instance = _this.instance;
-        var keys = Object.getOwnPropertyNames(instance.__proto__);
-        keys = keys.concat(Object.getOwnPropertyNames(instance));
-        for (var _iterator = keys, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
-            var _ref;
+function normalize(vNode, parentRef) {
+    if (vNode == null) return vNode;
+    // handle string and number by intact directly
+    if (isStringOrNumber(vNode)) return vNode;
 
-            if (_isArray) {
-                if (_i >= _iterator.length) break;
-                _ref = _iterator[_i++];
-            } else {
-                _i = _iterator.next();
-                if (_i.done) break;
-                _ref = _i.value;
-            }
+    return h$1(Wrapper, { reactVNode: vNode, parentRef: parentRef });
+}
 
-            var key = _ref;
+function normalizeChildren(vNodes, parentRef) {
+    if (isArray$1(vNodes)) {
+        return vNodes.map(function (vNode) {
+            return normalize(vNode, parentRef);
+        });
+    }
+    return normalize(vNodes, parentRef);
+}
 
-            if (!ignoreKeys.includes(key)) {
-                if (isFunction$1(instance[key])) {
-                    _this[key] = instance[key].bind(_this);
-                } else {
-                    _this[key] = instance[key];
-                }
-            }
+function normalizeProps(props, context, parentRef) {
+    if (!props) return;
+
+    var _props = {};
+    var _blocks = _props._blocks = {};
+    var tmp = void 0;
+    for (var key in props) {
+        if (key === 'children') {
+            _props.children = normalizeChildren(props.children, parentRef);
+        } else if (tmp = getEventName(key)) {
+            _props[tmp] = props[key];
+        } else if (key.substring(0, 2) === 'b-') {
+            // is a block
+            _blocks[key.substring(2)] = normalizeBlock(props[key]);
+        } else {
+            _props[key] = props[key];
         }
-        return _this;
     }
 
-    InheritIntactReact.prototype._create = function _create() {
-        this.$$ctor.getDerivedStateFromProps && this.$$ctor.getDerivedStateFromProps();
-        this.componentWillMount && this.componentWillMount();
-    };
+    _props._context = normalizeContext(context);
 
-    InheritIntactReact.prototype._mount = function _mount() {
-        this.componentDidMount && this.componentDidMount();
-    };
+    return _props;
+}
 
-    InheritIntactReact.prototype._beforeUpdate = function _beforeUpdate() {
-        this.$$ctor.getDerivedStateFromProps && this.$$ctor.getDerivedStateFromProps();
-        this.componentWillReceiveProps && this.componentWillReceiveProps();
-        this.componentWillUpdate && this.componentWillUpdate();
-        this.shouldComponentUpdate && this.shouldComponentUpdate();
-    };
-
-    InheritIntactReact.prototype._update = function _update() {
-        this.getSnapshotBeforeUpdate && this.getSnapshotBeforeUpdate();
-        this.componentDidUpdate && this.componentDidUpdate();
-    };
-
-    InheritIntactReact.prototype._destory = function _destory() {
-        this.componentWillUnmount && this.componentWillUnmount();
-    };
-
-    InheritIntactReact.prototype.defaults = function defaults$$1() {
-        return InheritIntactReact.Ctor.props;
-    };
-
-    InheritIntactReact.prototype.template = function template(obj, _Vdt, blocks, $callee) {
-        var self = this.data;
-
-        var _conversionChildrenBl = conversionChildrenBlocks(self.instance.render.apply(self)),
-            children = _conversionChildrenBl.children;
-
-        if (children.length > 1) {
-            throw new Error('children must return only one' + children);
+function normalizeContext(context) {
+    var _context = context._context;
+    return {
+        data: {
+            get: function get$$1(name) {
+                if (name != null) {
+                    return _get(_context.state, name);
+                } else {
+                    return _context.state;
+                }
+            },
+            set: function set$$1(name, value) {
+                var state = _extends({}, _context.state);
+                _set(state, name, value);
+                _context.setState(state);
+            }
         }
-        var vNode = children;
-        vNode.children = vNode.props.children;
-        return vNode;
     };
-
-    InheritIntactReact.prototype.setState = function setState(state, callback) {
-        this.state = state;
-        this.set({ state: state });
-        isFunction$1(callback) && callback.apply(this);
-    };
-
-    InheritIntactReact.prototype.forceUpdate = function forceUpdate(callback) {
-        this.update();
-        isFunction$1(callback) && callback.apply(this);
-    };
-
-    return InheritIntactReact;
-}(Intact);
-
-function isReactComponent(type) {
-    return isFunction$1(type) && type.prototype.render && type.prototype.isReactComponent && type.prototype.$$cid !== 'IntactReact';
 }
 
-function isReactFunctional(type) {
-    return isFunction$1(type) && type.prototype.$$cid !== 'IntactReact';
-}
+function normalizeBlock(block, parentRef) {
+    if (isFunction(block)) {
+        return function (parent) {
+            for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+                args[_key - 1] = arguments[_key];
+            }
 
-function conversionChildrenBlocks(children) {
-    if (!children) {
-        return {
-            children: children,
-            _blocks: {}
+            return normalizeChildren(block.apply(this, args), parentRef);
+        };
+    } else {
+        return function () {
+            return normalizeChildren(block, parentRef);
         };
     }
-    if (!isArray$1(children)) {
-        children = [children];
-    }
-    var newChildren = [];
-    var newBlocks = {};
-
-    each(children, function (child) {
-        if (!child) {
-            return;
-        }
-        var vNode = child;
-        if (isStringOrNumber(child)) {
-            vNode = new VNode(Types.Text, null, {}, child);
-        } else if (isObject$1(child) && child.$$typeof === REACT_ELEMENT_TYPE) {
-            var props = conversionProps(extend$1({}, child.attributes, { key: child.key, ref: child.ref }, child.props));
-            var type = child.type;
-            if (isReactComponent(type)) {
-                InheritIntactReact.Ctor = child.type;
-                InheritIntactReact.Ctor.props = props;
-                type = InheritIntactReact;
-            } else if (isReactFunctional(type)) {
-                type = function type(props) {
-                    var _children = child.type(props);
-
-                    var _conversionChildrenBl2 = conversionChildrenBlocks(_children),
-                        children = _conversionChildrenBl2.children;
-
-                    if (children.length > 1) {
-                        throw new Error('children must return only one' + children);
-                    }
-                    var vNode = children;
-                    vNode.children = vNode.props.children;
-                    return vNode;
-                };
-            }
-            vNode = h(type, props, props.children, null, child.key, child.ref);
-        }
-        if (isObject$1(vNode.props) && vNode.props.slot) {
-            var slotName = vNode.props.slot === undefined || vNode.props.slot === true ? 'default' : vNode.props.slot;
-            delete vNode.props.slot;
-            newBlocks[slotName] = function (parent) {
-                vNode.children = vNode.props.children;
-                return vNode;
-            };
-        } else {
-            newChildren.push(vNode);
-        }
-    });
-    if (newChildren.length === 1) {
-        newChildren = newChildren[0];
-    }
-    return {
-        children: newChildren,
-        _blocks: newBlocks
-    };
 }
 
-function isEvent(props, key) {
-    if (isFunction$1(props[key]) && /^evChanged?-?/.test(key)) {
-        return true;
+function getEventName(propName) {
+    var first = propName[0],
+        second = propName[1],
+        third = propName[2];
+
+    var tmp = void 0;
+    if (first === 'o' && second === 'n') {
+        if (third === '$') {
+            // e.g. on$change-value
+            return 'ev-$' + propName.substring(3).replace(/\-/g, ':');
+        } else if ((tmp = third.charCodeAt(0)) && tmp >= 65 && tmp <= 90) {
+            // e.g. onClick
+            return 'ev-' + propName.substring(2).toLowerCase();
+        }
     }
-    return false;
 }
 
-function isReactEvent(props, key) {
-    if (isFunction$1(props[key]) && /^on[A-Z]/.test(key)) {
-        return true;
-    }
-    return false;
-}
+var _Intact$utils$2 = Intact.utils;
+var isStringOrNumber$1 = _Intact$utils$2.isStringOrNumber;
+var isArray$2 = _Intact$utils$2.isArray;
 
-function conversionProps(props) {
-    var _loop = function _loop(key) {
-        if (hasOwn.call(props, key)) {
-            //兼容 事件类型
-            if (isEvent(props, key)) {
-                var evEvent = 'ev-' + key.replace(/^evChange(d?)-?(.*)$/, function (text, $1, $2) {
-                    if ($2) {
-                        return '$change' + $1 + ':' + $2;
-                    }
-                    return '$change' + $1;
+// wrap the functional component of intact
+
+function functionalWrapper(Component) {
+    function Ctor(props, context) {
+        if (context) {
+            // invoked by React
+            var vNodes = Component(normalizeProps(props, context), true);
+            if (isArray$2(vNodes)) {
+                return vNodes.map(function (vNode) {
+                    return normalizeIntactVNodeToReactVNode(vNode);
                 });
-                props[evEvent] = props[key];
-                delete props[key];
             }
-            if (isReactEvent(props, key)) {
-                var _evEvent = 'ev-' + key.replace(/^on([A-Z].*)$/, "$1").toLowerCase();
-                props[_evEvent] = props[key];
-                delete props[key];
-            }
-            //兼容 react 支持obj类型的ref
-            if (key === 'ref' && isObject$1(props[key])) {
-                props[key] = function (i) {
-                    props[key].current = i;
-                };
-            }
-            //兼容 children 到 intact 类型
-            if (key === 'children' && props['children']) {
-                var _conversionChildrenBl3 = conversionChildrenBlocks(props['children']),
-                    children = _conversionChildrenBl3.children,
-                    _blocks = _conversionChildrenBl3._blocks;
-
-                props['children'] = children;
-                props['_blocks'] = _blocks;
-            }
+            return normalizeIntactVNodeToReactVNode(vNodes);
+        } else {
+            // invoked by Intact
+            return Component(props);
         }
-    };
-
-    for (var key in props) {
-        _loop(key);
     }
-    return props;
+
+    return Ctor;
+}
+
+function normalizeIntactVNodeToReactVNode(vNode) {
+    if (isStringOrNumber$1(vNode)) {
+        return vNode;
+    } else if (vNode) {
+        return createElement(vNode.tag, vNode.props, vNode.props.children || vNode.children);
+    }
 }
 
 // for webpack alias Intact to IntactReact
 var _Intact$utils = Intact.utils;
-var get = _Intact$utils.get;
-var set = _Intact$utils.set;
-var extend = _Intact$utils.extend;
-var isObject = _Intact$utils.isObject;
+var noop = _Intact$utils.noop;
 var isArray = _Intact$utils.isArray;
-var create = _Intact$utils.create;
-var isFunction = _Intact$utils.isFunction;
+var isObject = _Intact$utils.isObject;
+
+var h = Intact.Vdt.miss.h;
+
+var mountedQueue = void 0;
 
 var IntactReact = function (_Intact) {
     inherits(IntactReact, _Intact);
 
-    IntactReact.functionalWrapper = function functionalWrapper(Wrapper) {
-        return function (_IntactReact) {
-            inherits(FunctionalClass, _IntactReact);
-
-            function FunctionalClass() {
-                classCallCheck(this, FunctionalClass);
-                return possibleConstructorReturn(this, _IntactReact.apply(this, arguments));
-            }
-
-            FunctionalClass.prototype.template = function template(data) {
-                return Wrapper(data.props, true);
-            };
-
-            return FunctionalClass;
-        }(IntactReact);
-    };
-
-    function IntactReact() {
+    function IntactReact(props, context) {
         classCallCheck(this, IntactReact);
 
+        // React will pass context to constructor 
+        if (context) {
+            var parentRef = {};
+            var normalizedProps = normalizeProps(props, context, parentRef);
+
+            var _this = possibleConstructorReturn(this, _Intact.call(this, normalizedProps));
+
+            parentRef.instance = _this;
+
+            // fake the vNode
+            _this.vNode = h(_this.constructor, normalizedProps);
+
+            // We must keep the props to be undefined, 
+            // otherwise React will think it has mutated
+            _this._props = _this.props;
+            delete _this.props;
+            _this._isReact = true;
+        } else {
+            var _this = possibleConstructorReturn(this, _Intact.call(this, props));
+        }
+        return possibleConstructorReturn(_this);
+    }
+
+    IntactReact.prototype.getChildContext = function getChildContext() {
+        return {
+            parent: this
+        };
+    };
+
+    IntactReact.prototype.get = function get$$1() {
         for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
             args[_key] = arguments[_key];
         }
 
-        var isReactCall = args.length === 2; //react 实例化是会传入两个参数  , 故使用此判断 是否为react 调用实例
+        if (this._isReact) {
+            var _Intact$prototype$get;
 
-        var _this = possibleConstructorReturn(this, _Intact.call.apply(_Intact, [this].concat(args)));
+            var props = this.props;
+            this.props = this._props;
+            var result = (_Intact$prototype$get = _Intact.prototype.get).call.apply(_Intact$prototype$get, [this].concat(args));
+            this.props = props;
+            return result;
+        } else {
+            var _Intact$prototype$get2;
 
-        if (isReactCall) {
-            _this.$$innerInstance = undefined;
-            _this.props = args[0]; //react 需要验证props 全等 ,蛋疼
-            _this.$$wrapDom = null;
-            _this.$$props = extend({}, _this.props);
+            return (_Intact$prototype$get2 = _Intact.prototype.get).call.apply(_Intact$prototype$get2, [this].concat(args));
         }
-        return _this;
-    }
+    };
+
+    IntactReact.prototype.set = function set$$1() {
+        for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+            args[_key2] = arguments[_key2];
+        }
+
+        if (this._isReact) {
+            var _Intact$prototype$set;
+
+            var props = this.props;
+            this.props = this._props;
+            var result = (_Intact$prototype$set = _Intact.prototype.set).call.apply(_Intact$prototype$set, [this].concat(args));
+            this.props = props;
+            return result;
+        } else {
+            var _Intact$prototype$set2;
+
+            return (_Intact$prototype$set2 = _Intact.prototype.set).call.apply(_Intact$prototype$set2, [this].concat(args));
+        }
+    };
 
     IntactReact.prototype.componentDidMount = function componentDidMount() {
-        var parentElement = this.$$wrapDom.parentElement;
-        //重新初始化并创建节点 , 替换已存在节点
-        this.$$innerInstance = new this.constructor(conversionProps(this.$$props));
-        parentElement.replaceChild(this.$$innerInstance.init(), this.$$wrapDom);
-        this.$$innerInstance.mount();
+        var _this2 = this;
+
+        var oldTriggerFlag = this._shouldTrigger;
+        this.__initMountedQueue();
+
+        // disable intact async component
+        this.inited = true;
+
+        // add parentVNode
+        this.parentVNode = this.vNode.parentVNode = this.context.parent && this.context.parent.vNode;
+
+        var dom = this.init(null, this.vNode);
+        var parentElement = this._placeholder.parentElement;
+        parentElement.replaceChild(dom, this._placeholder);
+        // persist the placeholder to let parentNode to remove the real dom
+        this._placeholder._realElement = dom;
+        if (!parentElement._hasRewrite) {
+            var removeChild = parentElement.removeChild;
+            parentElement.removeChild = function (child) {
+                removeChild.call(this, child._realElement || child);
+            };
+            parentElement._hasRewrite = true;
+        }
+
+        // add mount lifecycle method to queue
+        this.mountedQueue.push(function () {
+            _this2.mount();
+        });
+
+        this.__triggerMountedQueue();
+        this._shouldTrigger = oldTriggerFlag;
     };
 
     IntactReact.prototype.componentWillUnmount = function componentWillUnmount() {
-        this.$$innerInstance && this.$$innerInstance.destroy();
+        this.destroy();
     };
 
-    IntactReact.prototype.componentDidUpdate = function componentDidUpdate(prevProps, prevState, snapshot) {
-        // 更新实例
-        this.$$innerInstance && this.$$innerInstance.set(conversionProps(this.$$props));
+    IntactReact.prototype.componentDidUpdate = function componentDidUpdate() {
+        var oldTriggerFlag = this._shouldTrigger;
+        this.__initMountedQueue();
+
+        var vNode = h(this.constructor, normalizeProps(this.props, this.context, { instance: this }));
+        var lastVNode = this.vNode;
+        vNode.children = this;
+        this.vNode = vNode;
+        this.parentVNode = vNode.parentVNode = this.context.parent && this.context.parent.vNode;
+
+        this.update(lastVNode, vNode);
+
+        this.__triggerMountedQueue();
+        this._shouldTrigger = oldTriggerFlag;
+    };
+
+    IntactReact.prototype.__ref = function __ref(element) {
+        this._placeholder = element;
     };
 
     IntactReact.prototype.render = function render() {
+        return React.createElement('i', {
+            ref: this.__ref
+        });
+    };
+
+    // we should promise that all intact components have been mounted
+    IntactReact.prototype.__initMountedQueue = function __initMountedQueue() {
+        this._shouldTrigger = false;
+        if (!mountedQueue || mountedQueue.done) {
+            this._shouldTrigger = true;
+            if (!this.mountedQueue || this.mountedQueue.done) {
+                this._initMountedQueue();
+            }
+            mountedQueue = this.mountedQueue;
+            pushStack();
+        } else {
+            this.mountedQueue = mountedQueue;
+        }
+    };
+
+    IntactReact.prototype.__triggerMountedQueue = function __triggerMountedQueue() {
         var _this3 = this;
 
-        this.$$props = extend(this.$$props, this.props);
-        return React.createElement('i', extend({}, {
-            ref: function ref(element) {
-                _this3.$$wrapDom = element;
-            }
-        }), '');
+        if (this._shouldTrigger) {
+            FakePromise.all(promises).then(function () {
+                _this3._triggerMountedQueue();
+                mountedQueue = null;
+                _this3._shouldTrigger = false;
+                popStack();
+            });
+        }
     };
 
     createClass(IntactReact, [{
-        key: '$$cid',
-        get: function get() {
-            return 'IntactReact';
-        }
-    }, {
         key: 'isMounted',
-        get: function get() {
+        get: function get$$1() {
             return this.mounted;
-        }
-    }, {
-        key: 'isReactComponent',
-        get: function get() {
-            return {};
         }
     }]);
     return IntactReact;
 }(Intact);
+
+// for workInProgress.tag detection 
+
+
+IntactReact.functionalWrapper = functionalWrapper;
+IntactReact.$$cid = 'IntactReact';
+IntactReact.prototype.isReactComponent = {};
+// for getting _context in Intact
+IntactReact.contextTypes = {
+    _context: noop,
+    parent: noop
+};
+IntactReact.childContextTypes = {
+    parent: noop
+};
 
 module.exports = IntactReact;
