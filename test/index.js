@@ -439,12 +439,12 @@ describe('Unit test', function() {
             const mount1 = sinon.spy(function() {
                 console.log(1);
                 expect(document.body.contains(this.element)).to.eql(true);
-                console.log(this.element.outerHTML);
+                expect(this.element.outerHTML).to.eql('<div><div><div>test</div></div></div>');
             });
             const mount2 = sinon.spy(function() {
                 console.log(2);
                 expect(document.body.contains(this.element)).to.eql(true);
-                console.log(this.element.outerHTML);
+                expect(this.element.outerHTML).to.eql('<div>test</div>');
             });
             const C = createIntactComponent(`<div>{self.get('children')}</div>`, {
                 _mount: mount1
@@ -525,5 +525,9 @@ describe('Unit test', function() {
             });
             expect(mount.callCount).to.eql(1);
         });
+    });
+
+    describe('vNode', () => {
+
     });
 });

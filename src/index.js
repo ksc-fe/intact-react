@@ -3,6 +3,7 @@ import React from 'react';
 import Intact from 'intact/dist';
 import {normalizeProps} from './normalize'
 import functionalWrapper from './functionalWrapper';
+import {resetPromises} from './Wrapper';
 import FakePromise, {promises, pushStack, popStack} from './FakePromise'; 
 
 const {noop} = Intact.utils;
@@ -136,7 +137,7 @@ class IntactReact extends Intact {
 
     __triggerMountedQueue() {
         if (this._shouldTrigger) {
-            FakePromise.all(promises).then(() => {
+            FakePromise.all(promises.value).then(() => {
                 this._triggerMountedQueue();
                 mountedQueue = null;
                 this._shouldTrigger = false;
