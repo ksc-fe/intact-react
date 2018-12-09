@@ -168,8 +168,8 @@ describe('Unit test', function() {
                     'test'
                 ];
             });
-            render(<Components>test</Components>);
-            expect(container.innerHTML).to.eql('<div>test</div><div>text</div>test');
+            render(<Components>test<i>test</i></Components>);
+            expect(container.innerHTML).to.eql('<div>test<i>test</i></div><div>text</div>test');
         });
 
         it('render block to intact functional component', () => {

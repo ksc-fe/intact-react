@@ -2,13 +2,21 @@ import Intact from 'intact/dist';
 import Wrapper from './Wrapper';
 import createElement from './createElement';
 
-const h = Intact.Vdt.miss.h;
+const {h, VNode} = Intact.Vdt.miss;
 const {isFunction, isArray, isStringOrNumber, set, get} = Intact.utils;
 
 export function normalize(vNode, parentRef) {
     if (vNode == null) return vNode;
     // handle string and number by intact directly
     if (isStringOrNumber(vNode)) return vNode;
+    // maybe return by functional component
+    if (vNode instanceof VNode) {
+        // update parentRef
+        if (vNode.tag === Wrapper) {
+            vNode.props.parentRef = parentRef;
+        }
+        return vNode;
+    }
 
     return h(Wrapper, {reactVNode: vNode, parentRef});
 }
@@ -65,14 +73,14 @@ export function normalizeContext(context) {
     }
 }
 
-export function normalizeBlock(block, parentRef) {
+export function normalizeBlock(block) {
     if (isFunction(block)) {
         return function(parent, ...args) {
-            return normalizeChildren(block.apply(this, args), parentRef);
+            return normalizeChildren(block.apply(this, args), {instance: this.data});
         }
     } else {
         return function() {
-            return normalizeChildren(block, parentRef);
+            return normalizeChildren(block, {instance: this.data});
         }
     }
 }

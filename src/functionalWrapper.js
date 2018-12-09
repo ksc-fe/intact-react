@@ -9,7 +9,7 @@ export default function functionalWrapper(Component) {
     function Ctor(props, context) {
         if (context) {
             // invoked by React
-            const vNodes = Component(normalizeProps(props, context), true);
+            const vNodes = Component(normalizeProps(props, context, {}), true);
             if (isArray(vNodes)) {
                 return vNodes.map(vNode => {
                     return normalizeIntactVNodeToReactVNode(vNode);
