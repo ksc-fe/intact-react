@@ -5,9 +5,9 @@ import {normalizeProps} from './normalize'
 import functionalWrapper from './functionalWrapper';
 import FakePromise, {promises, pushStack, popStack} from './FakePromise'; 
 
-const {noop} = Intact.utils;
+const {noop, isArray, isObject} = Intact.utils;
+const h = Intact.Vdt.miss.h;
 
-let activeInstance;
 let mountedQueue;
 
 class IntactReact extends Intact {
@@ -18,10 +18,14 @@ class IntactReact extends Intact {
     constructor(props, context) {
         // React will pass context to constructor 
         if (context) {
-            const normalizedProps = normalizeProps(props, context);
+            const parentRef = {};
+            const normalizedProps = normalizeProps(props, context, parentRef);
             super(normalizedProps);
+            parentRef.instance = this;
+
             // fake the vNode
-            this.vNode = {props: normalizedProps};
+            this.vNode = h(this.constructor, normalizedProps);
+
             // We must keep the props to be undefined, 
             // otherwise React will think it has mutated
             this._props = this.props; 
@@ -30,6 +34,12 @@ class IntactReact extends Intact {
         } else {
             super(props);
         }
+    }
+
+    getChildContext() {
+        return {
+            parent: this,
+        };
     }
 
     get(...args) {
@@ -63,6 +73,9 @@ class IntactReact extends Intact {
         // disable intact async component
         this.inited = true;
 
+        // add parentVNode
+        this.parentVNode = this.vNode.parentVNode = this.context.parent && this.context.parent.vNode;
+
         const dom = this.init(null, this.vNode);
         const parentElement = this._placeholder.parentElement;
         parentElement.replaceChild(dom, this._placeholder);
@@ -93,11 +106,18 @@ class IntactReact extends Intact {
         const oldTriggerFlag = this._shouldTrigger;
         this.__initMountedQueue();
 
-        const vNode = {
-            props: normalizeProps(this.props, this.context)
-        };
+        const vNode = h(
+            this.constructor, 
+            normalizeProps(
+                this.props,
+                this.context, 
+                {instance: this}
+            )
+        );
         const lastVNode = this.vNode;
+        vNode.children = this;
         this.vNode = vNode;
+        this.parentVNode = vNode.parentVNode = this.context.parent && this.context.parent.vNode;
 
         this.update(lastVNode, vNode);
 
@@ -150,7 +170,11 @@ class IntactReact extends Intact {
 IntactReact.prototype.isReactComponent = {};
 // for getting _context in Intact
 IntactReact.contextTypes = {
-    _context: noop
+    _context: noop,
+    parent: noop,
+};
+IntactReact.childContextTypes = {
+    parent: noop
 };
 
 export default IntactReact

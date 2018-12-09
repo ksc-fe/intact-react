@@ -5,22 +5,22 @@ import createElement from './createElement';
 const h = Intact.Vdt.miss.h;
 const {isFunction, isArray, isStringOrNumber, set, get} = Intact.utils;
 
-export function normalize(vNode) {
+export function normalize(vNode, parentRef) {
     if (vNode == null) return vNode;
     // handle string and number by intact directly
     if (isStringOrNumber(vNode)) return vNode;
 
-    return h(Wrapper, {reactVNode: vNode});
+    return h(Wrapper, {reactVNode: vNode, parentRef});
 }
 
-export function normalizeChildren(vNodes) {
+export function normalizeChildren(vNodes, parentRef) {
     if (isArray(vNodes)) {
-        return vNodes.map(vNode => normalize(vNode));
+        return vNodes.map(vNode => normalize(vNode, parentRef));
     }
-    return normalize(vNodes);
+    return normalize(vNodes, parentRef);
 }
 
-export function normalizeProps(props, context) {
+export function normalizeProps(props, context, parentRef) {
     if (!props) return;
 
     const _props = {};
@@ -28,7 +28,7 @@ export function normalizeProps(props, context) {
     let tmp;
     for (let key in props) {
         if (key === 'children') {
-            _props.children = normalizeChildren(props.children);
+            _props.children = normalizeChildren(props.children, parentRef);
         } else if ((tmp = getEventName(key))){
             _props[tmp] = props[key];
         } else if (key.substring(0, 2) === 'b-') {
@@ -65,14 +65,14 @@ export function normalizeContext(context) {
     }
 }
 
-export function normalizeBlock(block) {
+export function normalizeBlock(block, parentRef) {
     if (isFunction(block)) {
         return function(parent, ...args) {
-            return normalizeChildren(block.apply(this, args));
+            return normalizeChildren(block.apply(this, args), parentRef);
         }
     } else {
         return function() {
-            return normalizeChildren(block);
+            return normalizeChildren(block, parentRef);
         }
     }
 }

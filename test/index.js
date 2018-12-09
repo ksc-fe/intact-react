@@ -528,6 +528,122 @@ describe('Unit test', function() {
     });
 
     describe('vNode', () => {
+        it('should get parentVNode', () => {
+            const C = createIntactComponent(`<div>{self.get('children')}</div>`, {
+                displayName: 'C',
+                _mount() {
+                    expect(this.parentVNode === undefined).to.be.true;
+                }
+            });
+            const D = createIntactComponent('<span>test</span>', {
+                _mount() {
+                    expect(this.parentVNode.parentVNode.tag === C).to.be.true;
+                },
+                displayName: 'D',
+            });
+            const E = createIntactComponent('<i>{self.get("children")}</i>', {
+                displayName: 'E',
+                _mount() {
+                    expect(this.parentVNode.tag === C).to.be.true;
+                }
+            });
+            const F = createIntactComponent('<span>f</span>', {
+                _mount() {
+                    expect(this.parentVNode.tag === C).to.be.true;
+                }
+            });
 
+            const instance = renderApp(function() {
+                return <C>
+                    <p><E><b><D /></b></E></p>
+                    <F />
+                </C>
+            });
+        });
+
+        it('should get parentVNode in template & update', () => {
+            const mount = sinon.spy();
+            const update = sinon.spy();
+
+            const C = createIntactComponent(`<div>{self.get('children')}</div>`);
+            C.displayName = 'C';
+            const D = createIntactComponent('<i>{self.get("children")}</i>', {
+                displayName: 'D',
+                _mount() {
+                    mount();
+                    expect(this.parentVNode.tag === E).to.be.true;
+                    expect(this.parentVNode.parentVNode.tag === F).to.be.true;
+                },
+
+                _update() {
+                    update();
+                    expect(this.parentVNode.tag === E).to.be.true;
+                    expect(this.parentVNode.parentVNode.tag === F).to.be.true;
+                }
+            });
+            D.displayName = 'D';
+            const E = createIntactComponent(`<D>{self.get('children')}</D>`, {
+                _init() {
+                    this.D = D;
+                }
+            });
+            E.displayName = 'E';
+            const F = createIntactComponent(`<C>{self.get('children')}</C>`, {
+                _init() {
+                    this.C = C;
+                }
+            });
+            F.displayName = 'F';
+
+            const instance = renderApp(function() {
+                return (
+                    <div>
+                        {this.state.count}
+                        <F>
+                            <p>
+                                {this.state.count}
+                                <E>
+                                    test{this.state.count}
+                                </E>
+                            </p>
+                        </F>
+                    </div>
+                );
+            }, {count: 1});
+
+            instance.setState({count: 2});
+            expect(mount.callCount).to.eql(1);
+            expect(update.callCount).to.eql(1);
+        });
+
+        it('change props of react children in intact', () => {
+            const onClick = sinon.spy(() => console.log('click'));
+            class IntactComponent extends Intact {
+                get template() {
+                    return `<div>{self.get('children')}</div>`
+                }
+
+                _init() {
+                    this._changeProps();
+                    this.on('$change:children', this._changeProps);
+                }
+
+                _changeProps() {
+                    const children = this.get('children');
+                    children.props['ev-click'] = this.onClick.bind(this);
+                }
+            }
+            IntactComponent.prototype.onClick = onClick;
+
+            const instance = renderApp(function() {
+                return <IntactComponent><div>click</div></IntactComponent>
+            });
+
+            container.firstChild.firstChild.click(); 
+            expect(onClick.callCount).to.eql(1);
+            instance.forceUpdate();
+            container.firstChild.firstChild.click(); 
+            expect(onClick.callCount).to.eql(2);
+        });
     });
 });
