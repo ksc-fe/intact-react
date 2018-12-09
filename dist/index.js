@@ -250,7 +250,9 @@ function createElement(type, props, children) {
 
 React.createElement = createElement;
 
-var h$1 = Intact.Vdt.miss.h;
+var _Intact$Vdt$miss = Intact.Vdt.miss;
+var h$1 = _Intact$Vdt$miss.h;
+var VNode = _Intact$Vdt$miss.VNode;
 var _Intact$utils$1 = Intact.utils;
 var isFunction = _Intact$utils$1.isFunction;
 var isArray$1 = _Intact$utils$1.isArray;
@@ -263,6 +265,14 @@ function normalize(vNode, parentRef) {
     if (vNode == null) return vNode;
     // handle string and number by intact directly
     if (isStringOrNumber(vNode)) return vNode;
+    // maybe return by functional component
+    if (vNode instanceof VNode) {
+        // update parentRef
+        if (vNode.tag === Wrapper) {
+            vNode.props.parentRef = parentRef;
+        }
+        return vNode;
+    }
 
     return h$1(Wrapper, { reactVNode: vNode, parentRef: parentRef });
 }
@@ -320,18 +330,18 @@ function normalizeContext(context) {
     };
 }
 
-function normalizeBlock(block, parentRef) {
+function normalizeBlock(block) {
     if (isFunction(block)) {
         return function (parent) {
             for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
                 args[_key - 1] = arguments[_key];
             }
 
-            return normalizeChildren(block.apply(this, args), parentRef);
+            return normalizeChildren(block.apply(this, args), { instance: this.data });
         };
     } else {
         return function () {
-            return normalizeChildren(block, parentRef);
+            return normalizeChildren(block, { instance: this.data });
         };
     }
 }
@@ -363,7 +373,7 @@ function functionalWrapper(Component) {
     function Ctor(props, context) {
         if (context) {
             // invoked by React
-            var vNodes = Component(normalizeProps(props, context), true);
+            var vNodes = Component(normalizeProps(props, context, {}), true);
             if (isArray$2(vNodes)) {
                 return vNodes.map(function (vNode) {
                     return normalizeIntactVNodeToReactVNode(vNode);
