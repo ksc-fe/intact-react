@@ -159,28 +159,16 @@ var Wrapper = function () {
     Wrapper.prototype.init = function init(lastVNode, nextVNode) {
         // let the component destroy by itself
         this.destroyed = true;
-        var vNode = this._addProps(nextVNode);
-
         // react can use comment node as parent so long as its text like bellow
-        var placeholder = document.createComment(' react-mount-point-unstable ');
-        var promise = new FakePromise(function (resolve) {
-            // ReactDOM.render(nextVNode.props.reactVNode, placeholder, resolve);
-            ReactDOM.unstable_renderSubtreeIntoContainer(nextVNode.props.parentRef.instance, vNode, placeholder, resolve);
-        });
-        promises.push(promise);
-        this.placeholder = placeholder;
-        return placeholder;
+        this.placeholder = document.createComment(' react-mount-point-unstable ');
+        this._render(nextVNode);
+
+        return this.placeholder;
     };
 
     Wrapper.prototype.update = function update(lastVNode, nextVNode) {
-        var _this = this;
+        this._render(nextVNode);
 
-        var vNode = this._addProps(nextVNode);
-        var promise = new FakePromise(function (resolve) {
-            // ReactDOM.render(nextVNode.props.reactVNode, this.placeholder, resolve);
-            ReactDOM.unstable_renderSubtreeIntoContainer(nextVNode.props.parentRef.instance, vNode, _this.placeholder, resolve);
-        });
-        promises.push(promise);
         return this.placeholder;
     };
 
@@ -192,6 +180,22 @@ var Wrapper = function () {
                 placeholder.parentNode.removeChild(placeholder);
             });
         };
+    };
+
+    Wrapper.prototype._render = function _render(nextVNode) {
+        var _this = this;
+
+        var vNode = this._addProps(nextVNode);
+
+        var parentComponent = nextVNode.props.parentRef.instance;
+        var promise = new FakePromise(function (resolve) {
+            if (parentComponent && parentComponent._reactInternalFiber !== undefined) {
+                ReactDOM.unstable_renderSubtreeIntoContainer(parentComponent, vNode, _this.placeholder, resolve);
+            } else {
+                ReactDOM.render(vNode, _this.placeholder, resolve);
+            }
+        });
+        promises.push(promise);
     };
 
     // we can change props in intact, so we should sync the changes
@@ -275,7 +279,7 @@ function normalize(vNode, parentRef) {
     }
     // normalizde the firsthand intact component to let intact access its children
     if (vNode.type && vNode.type.$$cid === 'IntactReact') {
-        return h$1(vNode.type, normalizeProps(vNode.props, { _context: vNode._owner.stateNode }, parentRef, vNode.key), null, null, vNode.key, vNode.ref);
+        return h$1(vNode.type, normalizeProps(vNode.props, { _context: vNode._owner && vNode._owner.stateNode }, parentRef, vNode.key), null, null, vNode.key, vNode.ref);
     }
 
     // only wrap the react host element

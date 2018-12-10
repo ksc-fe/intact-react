@@ -181,6 +181,16 @@ describe('Unit test', function() {
             expect(container.innerHTML).to.eql('<div><span>test</span></div>');
         });
 
+        it('render block to firsthand intact component', () => {
+            const C = createIntactComponent(`<div><b:test args={[1]} />{self.get('children')}</div>`);
+            render(
+                <ChildrenIntactComponent>
+                    <C b-test={(v) => <div>{v}</div>}><div>2</div></C>
+                </ChildrenIntactComponent>
+            );
+            expect(container.innerHTML).to.eql('<div><div><div>1</div><div>2</div></div></div>');
+        });
+
         it('render intact functional component which has wrapped in intact component', () => {
             const h = Intact.Vdt.miss.h;
             const Component = Intact.functionalWrapper(function(props) {

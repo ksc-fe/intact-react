@@ -6,36 +6,16 @@ export default class Wrapper {
     init(lastVNode, nextVNode) {
         // let the component destroy by itself
         this.destroyed = true; 
-        const vNode = this._addProps(nextVNode);
-
         // react can use comment node as parent so long as its text like bellow
-        const placeholder = document.createComment(' react-mount-point-unstable ');
-        const promise = new FakePromise(resolve => {
-            // ReactDOM.render(nextVNode.props.reactVNode, placeholder, resolve);
-            ReactDOM.unstable_renderSubtreeIntoContainer(
-                nextVNode.props.parentRef.instance, 
-                vNode,
-                placeholder,
-                resolve
-            );
-        });
-        promises.push(promise);
-        this.placeholder = placeholder;
-        return placeholder;
+        this.placeholder = document.createComment(' react-mount-point-unstable ');
+        this._render(nextVNode);
+
+        return this.placeholder;
     }
 
     update(lastVNode, nextVNode) {
-        const vNode = this._addProps(nextVNode);
-        const promise = new FakePromise(resolve => {
-            // ReactDOM.render(nextVNode.props.reactVNode, this.placeholder, resolve);
-            ReactDOM.unstable_renderSubtreeIntoContainer(
-                nextVNode.props.parentRef.instance, 
-                vNode,
-                this.placeholder,
-                resolve
-            );
-        });
-        promises.push(promise);
+        this._render(nextVNode);
+
         return this.placeholder;
     }
 
@@ -47,6 +27,25 @@ export default class Wrapper {
                 placeholder.parentNode.removeChild(placeholder);
             });
         }
+    }
+
+    _render(nextVNode) {
+        const vNode = this._addProps(nextVNode);
+
+        const parentComponent = nextVNode.props.parentRef.instance;
+        const promise = new FakePromise(resolve => {
+            if (parentComponent && parentComponent._reactInternalFiber !== undefined) {
+                ReactDOM.unstable_renderSubtreeIntoContainer(
+                    parentComponent,
+                    vNode,
+                    this.placeholder,
+                    resolve
+                );
+            } else {
+                ReactDOM.render(vNode, this.placeholder, resolve);
+            }
+        });
+        promises.push(promise);
     }
 
     // we can change props in intact, so we should sync the changes
