@@ -432,6 +432,7 @@ var IntactReact = function (_Intact) {
 
             // fake the vNode
             _this.vNode = h(_this.constructor, normalizedProps);
+            _this.vNode.children = _this;
 
             // We must keep the props to be undefined, 
             // otherwise React will think it has mutated
