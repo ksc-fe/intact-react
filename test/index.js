@@ -234,6 +234,7 @@ describe('Unit test', function() {
                     return h(createIntactComponent(`<div>{self.get('_context').data.get('value')}</div>`), props);
                 });
                 render(<App />);
+                expect(container.innerHTML).to.eql('<div>1</div>');
             });
         });
 
