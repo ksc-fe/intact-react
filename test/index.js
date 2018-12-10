@@ -550,7 +550,9 @@ describe('Unit test', function() {
             });
             const F = createIntactComponent('<span>f</span>', {
                 _mount() {
-                    expect(this.parentVNode.tag === C).to.be.true;
+                    // firsthand intact component
+                    expect(this.parentVNode.tag === 'div').to.be.true;
+                    expect(this.parentVNode.parentVNode.tag === C).to.be.true;
                 }
             });
 
@@ -645,6 +647,20 @@ describe('Unit test', function() {
             instance.forceUpdate();
             container.firstChild.firstChild.click(); 
             expect(onClick.callCount).to.eql(2);
+        });
+
+        it('should get children of intact component', () => {
+            const C = createIntactComponent(`<div>{self.get('children')}</div>`, {
+                _init() {
+                    const {children, first} = this.get();
+                    if (first) {
+                        expect(children.tag === C).to.be.true;
+                    }
+                }
+            });
+            const instance = renderApp(function() {
+                return <C first={true}><C>test</C></C>
+            });
         });
     });
 });

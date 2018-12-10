@@ -275,7 +275,12 @@ function normalize(vNode, parentRef) {
         }
         return vNode;
     }
+    // normalizde the firsthand intact component to let intact access its children
+    if (vNode.type && vNode.type.$$cid === 'IntactReact') {
+        return h$1(vNode.type, normalizeProps(vNode.props, { _context: vNode._owner.stateNode }), null, null, vNode.key, vNode.ref);
+    }
 
+    // only wrap the react host element
     return h$1(Wrapper, { reactVNode: vNode, parentRef: parentRef });
 }
 
