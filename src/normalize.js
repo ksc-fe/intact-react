@@ -21,7 +21,7 @@ export function normalize(vNode, parentRef) {
     if (vNode.type && vNode.type.$$cid === 'IntactReact') {
         return h(
             vNode.type,
-            normalizeProps(vNode.props, {_context: vNode._owner.stateNode}),
+            normalizeProps(vNode.props, {_context: vNode._owner.stateNode}, parentRef, vNode.key),
             null,
             null,
             vNode.key,
@@ -40,7 +40,7 @@ export function normalizeChildren(vNodes, parentRef) {
     return normalize(vNodes, parentRef);
 }
 
-export function normalizeProps(props, context, parentRef) {
+export function normalizeProps(props, context, parentRef, key) {
     if (!props) return;
 
     const _props = {};
@@ -60,6 +60,9 @@ export function normalizeProps(props, context, parentRef) {
     }
 
     _props._context = normalizeContext(context);
+    if (key != null) {
+        _props.key = key;
+    }
 
     return _props;
 }

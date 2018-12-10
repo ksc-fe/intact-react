@@ -662,5 +662,19 @@ describe('Unit test', function() {
                 return <C first={true}><C>test</C></C>
             });
         });
+
+        it('should get key', () => {
+            const C = createIntactComponent(`<div>{self.get('children')}</div>`, {
+                _init() {
+                    const {key, first} = this.get();
+                    if (!first) {
+                        expect(key === 'a').to.be.true;
+                    }
+                }
+            });
+            const instance = renderApp(function() {
+                return <C first={true}><C key="a">test</C></C>
+            });
+        })
     });
 });

@@ -277,7 +277,7 @@ function normalize(vNode, parentRef) {
     }
     // normalizde the firsthand intact component to let intact access its children
     if (vNode.type && vNode.type.$$cid === 'IntactReact') {
-        return h$1(vNode.type, normalizeProps(vNode.props, { _context: vNode._owner.stateNode }), null, null, vNode.key, vNode.ref);
+        return h$1(vNode.type, normalizeProps(vNode.props, { _context: vNode._owner.stateNode }, parentRef, vNode.key), null, null, vNode.key, vNode.ref);
     }
 
     // only wrap the react host element
@@ -293,26 +293,29 @@ function normalizeChildren(vNodes, parentRef) {
     return normalize(vNodes, parentRef);
 }
 
-function normalizeProps(props, context, parentRef) {
+function normalizeProps(props, context, parentRef, key) {
     if (!props) return;
 
     var _props = {};
     var _blocks = _props._blocks = {};
     var tmp = void 0;
-    for (var key in props) {
-        if (key === 'children') {
+    for (var _key in props) {
+        if (_key === 'children') {
             _props.children = normalizeChildren(props.children, parentRef);
-        } else if (tmp = getEventName(key)) {
-            _props[tmp] = props[key];
-        } else if (key.substring(0, 2) === 'b-') {
+        } else if (tmp = getEventName(_key)) {
+            _props[tmp] = props[_key];
+        } else if (_key.substring(0, 2) === 'b-') {
             // is a block
-            _blocks[key.substring(2)] = normalizeBlock(props[key]);
+            _blocks[_key.substring(2)] = normalizeBlock(props[_key]);
         } else {
-            _props[key] = props[key];
+            _props[_key] = props[_key];
         }
     }
 
     _props._context = normalizeContext(context);
+    if (key != null) {
+        _props.key = key;
+    }
 
     return _props;
 }
@@ -340,8 +343,8 @@ function normalizeContext(context) {
 function normalizeBlock(block) {
     if (isFunction(block)) {
         return function (parent) {
-            for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-                args[_key - 1] = arguments[_key];
+            for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key2 = 1; _key2 < _len; _key2++) {
+                args[_key2 - 1] = arguments[_key2];
             }
 
             return normalizeChildren(block.apply(this, args), { instance: this.data });
