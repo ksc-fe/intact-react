@@ -25,6 +25,7 @@ class IntactReact extends Intact {
 
             // fake the vNode
             this.vNode = h(this.constructor, normalizedProps);
+            this.vNode.children = this;
 
             // We must keep the props to be undefined, 
             // otherwise React will think it has mutated

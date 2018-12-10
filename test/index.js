@@ -539,6 +539,7 @@ describe('Unit test', function() {
             const D = createIntactComponent('<span>test</span>', {
                 _mount() {
                     expect(this.parentVNode.parentVNode.tag === C).to.be.true;
+                    expect(this.parentVNode.children).be.an.instanceof(E);
                 },
                 displayName: 'D',
             });
@@ -546,6 +547,7 @@ describe('Unit test', function() {
                 displayName: 'E',
                 _mount() {
                     expect(this.parentVNode.tag === C).to.be.true;
+                    expect(this.parentVNode.children).be.an.instanceof(C);
                 }
             });
             const F = createIntactComponent('<span>f</span>', {
@@ -553,6 +555,7 @@ describe('Unit test', function() {
                     // firsthand intact component
                     expect(this.parentVNode.tag === 'div').to.be.true;
                     expect(this.parentVNode.parentVNode.tag === C).to.be.true;
+                    expect(this.parentVNode.parentVNode.children).be.an.instanceof(C);
                 }
             });
 
@@ -576,12 +579,14 @@ describe('Unit test', function() {
                     mount();
                     expect(this.parentVNode.tag === E).to.be.true;
                     expect(this.parentVNode.parentVNode.tag === F).to.be.true;
+                    expect(this.parentVNode.parentVNode.children).be.an.instanceof(F);
                 },
 
                 _update() {
                     update();
                     expect(this.parentVNode.tag === E).to.be.true;
                     expect(this.parentVNode.parentVNode.tag === F).to.be.true;
+                    expect(this.parentVNode.parentVNode.children).be.an.instanceof(F);
                 }
             });
             D.displayName = 'D';
