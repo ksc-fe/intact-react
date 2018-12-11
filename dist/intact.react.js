@@ -497,6 +497,39 @@ var IntactReact = function (_Intact) {
         }
     };
 
+    IntactReact.prototype.init = function init() {
+        var _Intact$prototype$ini, _Intact$prototype$ini2;
+
+        for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+            args[_key3] = arguments[_key3];
+        }
+
+        if (!this._isReact) return (_Intact$prototype$ini = _Intact.prototype.init).call.apply(_Intact$prototype$ini, [this].concat(args));
+
+        mountedQueue = this.mountedQueue;
+        return (_Intact$prototype$ini2 = _Intact.prototype.init).call.apply(_Intact$prototype$ini2, [this].concat(args));
+    };
+
+    IntactReact.prototype.update = function update() {
+        var _Intact$prototype$upd, _Intact$prototype$upd2;
+
+        for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+            args[_key4] = arguments[_key4];
+        }
+
+        if (!this._isReact) return (_Intact$prototype$upd = _Intact.prototype.update).call.apply(_Intact$prototype$upd, [this].concat(args));
+
+        var oldTriggerFlag = this._shouldTrigger;
+        this.__initMountedQueue();
+
+        var element = (_Intact$prototype$upd2 = _Intact.prototype.update).call.apply(_Intact$prototype$upd2, [this].concat(args));
+
+        this.__triggerMountedQueue();
+        this._shouldTrigger = oldTriggerFlag;
+
+        return element;
+    };
+
     IntactReact.prototype.componentDidMount = function componentDidMount() {
         var _this2 = this;
 
@@ -582,10 +615,10 @@ var IntactReact = function (_Intact) {
         if (this._shouldTrigger) {
             FakePromise.all(promises).then(function () {
                 _this3._triggerMountedQueue();
-                mountedQueue = null;
-                _this3._shouldTrigger = false;
-                popStack();
             });
+            mountedQueue = null;
+            this._shouldTrigger = false;
+            popStack();
         }
     };
 

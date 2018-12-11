@@ -67,6 +67,27 @@ class IntactReact extends Intact {
         }
     }
 
+    init(...args) {
+        if (!this._isReact) return super.init(...args);
+
+        mountedQueue = this.mountedQueue;
+        return super.init(...args);
+    }
+
+    update(...args) {
+        if (!this._isReact) return super.update(...args);
+
+        const oldTriggerFlag = this._shouldTrigger;
+        this.__initMountedQueue();
+
+        const element = super.update(...args);
+
+        this.__triggerMountedQueue();
+        this._shouldTrigger = oldTriggerFlag;
+
+        return element;
+    }
+
     componentDidMount() {
         const oldTriggerFlag = this._shouldTrigger;
         this.__initMountedQueue();
@@ -159,10 +180,10 @@ class IntactReact extends Intact {
         if (this._shouldTrigger) {
             FakePromise.all(promises).then(() => {
                 this._triggerMountedQueue();
-                mountedQueue = null;
-                this._shouldTrigger = false;
-                popStack();
             });
+            mountedQueue = null;
+            this._shouldTrigger = false;
+            popStack();
         }
     }
 }

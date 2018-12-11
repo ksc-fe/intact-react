@@ -1,6 +1,7 @@
 import Intact from '../index';
 import React, {Component} from 'react'
 import ReactDOM from 'react-dom'
+import {promises} from '../src/FakePromise';
 
 describe('Unit test', function() {
     this.enableTimeouts(false);
@@ -262,23 +263,8 @@ describe('Unit test', function() {
     });
 
     describe('Update', () => {
-        let instance;
-        const renderApp = (_render, state) => {
-            class App extends React.Component {
-                constructor(props) {
-                    super(props);
-                    instance = this;
-                    window.vm = instance;
-                    this.state = state;
-                }
-                render() {
-                    return _render.call(this);
-                }
-            }
-            render(<App />);
-        }
         it('update intact component', () => {
-            renderApp(function() {
+            const instance = renderApp(function() {
                 return <PropsIntactComponent a={this.state.a} />
             }, {a: 1});
             instance.setState({a: 2});
@@ -286,7 +272,7 @@ describe('Unit test', function() {
         });
 
         it('update react element in intact component', () => {
-            renderApp(function() {
+            const instance = renderApp(function() {
                 return (
                     <ChildrenIntactComponent>
                         <div>{this.state.a}</div>
@@ -299,7 +285,7 @@ describe('Unit test', function() {
 
         it('insert and append intact component in react element', () => {
             const C = createIntactComponent(`<div>`)
-            renderApp(function() {
+            const instance = renderApp(function() {
                 return (
                     <div>
                         {this.state.list.map(item => {
@@ -316,7 +302,7 @@ describe('Unit test', function() {
         });
 
         it('insert and append react element in intact component', () => {
-            renderApp(function() {
+            const instance = renderApp(function() {
                 return (
                     <ChildrenIntactComponent>
                         {this.state.list.map(item => {
@@ -330,6 +316,27 @@ describe('Unit test', function() {
 
             instance.setState({list: [1, 2, 3]});
             expect(container.innerHTML).to.eql('<div><div>1</div><div>2</div><div>3</div></div>')
+        });
+
+        it('_update lifecycle of intact should be called after all children has updated when call its update method directly', () => {
+            const C = createIntactComponent(`<div><b:test args={[self.get('v')]} /></div>`, {
+                defaults() {
+                    return {v: 1};
+                },
+                _update() {
+                    expect(this.element.innerHTML).to.eql('<i>2</i>');
+                } 
+            });
+            const instance = renderApp(function() {
+                return (
+                    <C b-test={(v) => v === 1 ? <SimpleReactComponent>{v}</SimpleReactComponent> : <i>{v}</i>} ref={i => {
+                        this.i = i;
+                    }} />
+                );
+            });
+            instance.i.set('v', 2);
+            // should empty the promise array
+            expect(promises).to.eql([]);
         });
     });
 
@@ -476,7 +483,8 @@ describe('Unit test', function() {
             });
             expect(mount1.callCount).to.eql(1);
             expect(mount2.callCount).to.eql(1);
-            expect(mount2.calledAfter(mount1)).be.true;
+            // order is unnecessary
+            // expect(mount2.calledAfter(mount1)).be.true;
         });
 
         it('lifecycle of componentDidMount of nested react component in intact component', () => {
