@@ -38,7 +38,7 @@ export function normalize(vNode, parentRef) {
     return h(Wrapper, {reactVNode: vNode, parentRef});
 }
 
-export function normalizeChildren(vNodes, parentRef) {
+export function normalizeChildren(vNodes, parentRef = {}) {
     if (isArray(vNodes)) {
         return vNodes.map(vNode => normalize(vNode, parentRef));
     }

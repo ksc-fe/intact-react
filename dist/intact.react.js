@@ -288,7 +288,9 @@ function normalize(vNode, parentRef) {
     return h$1(Wrapper, { reactVNode: vNode, parentRef: parentRef });
 }
 
-function normalizeChildren(vNodes, parentRef) {
+function normalizeChildren(vNodes) {
+    var parentRef = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
     if (isArray$1(vNodes)) {
         return vNodes.map(function (vNode) {
             return normalize(vNode, parentRef);
@@ -635,6 +637,7 @@ var IntactReact = function (_Intact) {
 
 
 IntactReact.functionalWrapper = functionalWrapper;
+IntactReact.normalize = normalizeChildren;
 IntactReact.$$cid = 'IntactReact';
 IntactReact.prototype.isReactComponent = {};
 // for getting _context in Intact

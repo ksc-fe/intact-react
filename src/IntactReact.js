@@ -1,7 +1,7 @@
 import React from 'react';
 // for webpack alias Intact to IntactReact
 import Intact from 'intact/dist';
-import {normalizeProps} from './normalize'
+import {normalizeProps, normalizeChildren} from './normalize'
 import functionalWrapper from './functionalWrapper';
 import FakePromise, {promises, pushStack, popStack} from './FakePromise'; 
 
@@ -12,6 +12,8 @@ let mountedQueue;
 
 class IntactReact extends Intact {
     static functionalWrapper = functionalWrapper;
+
+    static normalize = normalizeChildren;
 
     static $$cid = 'IntactReact';
 
