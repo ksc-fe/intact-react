@@ -1,24 +1,51 @@
 // make sure all mount/update lifecycle methods of children have completed
 export default class FakePromise {
     static all = function(promises) {
-        let count = promises.length;
         let resolvedCount = 0;
         let callback;
+        let resolved = false;
+        let done = false;
 
-        promises.forEach(p => {
-            p.then(() => {
-                resolvedCount++;
-                if (count === resolvedCount) {
-                    callback && callback();
+        promises.forEach(p => p.then(then));
+
+        if (promises._hasRewrite) {
+            console.error('promises has not been done')
+        }
+        const push = promises.push;
+        promises.push = function(p) {
+            p.then(then);
+            push.call(promises, p);
+        };
+        promises._hasRewrite = true;
+
+        function _cb() {
+            // clear array
+            promises.length = 0;
+            promises.push = push;
+            promises._hasRewrite = false;
+            callback();
+        }
+
+        function then() {
+            resolvedCount++;
+            if (promises.length === resolvedCount) {
+                resolved = true;
+                if (done) {
+                    return console.error('promise has done');
                 }
-            });
-        });
+                if (callback) {
+                    done = true;
+                    _cb();
+                }
+            }
+        }
+
 
         return {
             then(cb) {
                 callback = cb;
-                if (!count) {
-                    callback();
+                if (!promises.length || resolved) {
+                    _cb();
                 }
             }
         };
@@ -26,29 +53,22 @@ export default class FakePromise {
 
     constructor(callback) {
         this.resolved = false;
-        this.callback = undefined;
+        this.callbacks = [];
         callback.call(this, () => this.resolve());
     }
 
     resolve() {
         this.resolved = true;
-        this.callback && this.callback();
+        let cb;
+        while (cb = this.callbacks.shift()) {
+            cb();
+        }
     }
 
     then(cb) {
-        this.callback = cb;
+        this.callbacks.push(cb);
         if (this.resolved) {
-            this.callback();
+            this.resolve();
         }
     }
-}
-
-export let promises = [];
-const stacks = [];
-export function pushStack() {
-    stacks.push(promises); 
-    promises = [];
-}
-export function popStack() {
-    promises = stacks.pop();
 }

@@ -1,5 +1,5 @@
 import ReactDOM from 'react-dom';
-import FakePromise, {promises} from './FakePromise';
+import FakePromise from './FakePromise';
 
 // wrap the react element to render it by react self
 export default class Wrapper {
@@ -32,7 +32,25 @@ export default class Wrapper {
     _render(nextVNode) {
         const vNode = this._addProps(nextVNode);
 
-        const parentComponent = nextVNode.props.parentRef.instance;
+        let parentComponent = nextVNode.props.parentRef.instance;
+        if (parentComponent) {
+            if (!parentComponent._reactInternalFiber) {
+                // is a firsthand intact component, get its parent instance
+                parentComponent = parentComponent.get('parentRef').instance;
+            }
+        } else {
+            // maybe the property which value is vNodes
+            // find the closest IntactReact instance
+            let parentVNode = nextVNode.parentVNode;
+            while (parentVNode) {
+                const children = parentVNode.children;
+                if (children && children._reactInternalFiber !== undefined) {
+                    parentComponent = children;
+                    break;
+                }
+                parentVNode = parentVNode.parentVNode;
+            }
+        }
         const promise = new FakePromise(resolve => {
             if (parentComponent && parentComponent._reactInternalFiber !== undefined) {
                 ReactDOM.unstable_renderSubtreeIntoContainer(
@@ -45,7 +63,7 @@ export default class Wrapper {
                 ReactDOM.render(vNode, this.placeholder, resolve);
             }
         });
-        promises.push(promise);
+        parentComponent.promises.push(promise);
     }
 
     // we can change props in intact, so we should sync the changes

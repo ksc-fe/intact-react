@@ -22,7 +22,7 @@ export function normalize(vNode, parentRef) {
         return h(
             vNode.type,
             normalizeProps(
-                vNode.props, 
+                {...vNode.props, parentRef}, 
                 {_context: vNode._owner && vNode._owner.stateNode},
                 parentRef,
                 vNode.key

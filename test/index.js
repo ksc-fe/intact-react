@@ -1,7 +1,6 @@
 import Intact from '../index';
 import React, {Component} from 'react'
 import ReactDOM from 'react-dom'
-import {promises} from '../src/FakePromise';
 
 describe('Unit test', function() {
     this.enableTimeouts(false);
@@ -25,7 +24,10 @@ describe('Unit test', function() {
     }
 
     const SimpleIntactComponent = createIntactComponent('<div>Intact Component</div>');
-    const ChildrenIntactComponent = createIntactComponent(`<div>{self.get('children')}</div>`);
+    const ChildrenIntactComponent = createIntactComponent(`<div>{self.get('children')}</div>`,{
+        displayName: 'ChildrenIntactComponent',
+    });
+    ChildrenIntactComponent.displayName = 'ChildrenIntactComponent';
     const PropsIntactComponent = createIntactComponent(`<div>a: {self.get('a')} b: {self.get('b')}</div>`);
     class SimpleReactComponent extends Component {
         render() {
@@ -150,6 +152,17 @@ describe('Unit test', function() {
                 render(<C b-footer={(i) => <span>footer{i}</span>}>children</C>);
 
                 expect(container.innerHTML).to.eql('<div>children<span>footer1</span></div>');
+            });
+
+            it('normalize the property which value is vNodes', () => {
+                const C = createIntactComponent(`<div>{normalize(self.get('test'))}</div>`, {
+                    _init() {
+                        this.normalize = Intact.normalize;
+                    }
+                });
+                render(<C test={<div>test</div>} />);
+
+                expect(container.innerHTML).to.eql('<div><div>test</div></div>');
             });
         });
 
@@ -335,8 +348,6 @@ describe('Unit test', function() {
                 );
             });
             instance.i.set('v', 2);
-            // should empty the promise array
-            expect(promises).to.eql([]);
         });
     });
 
@@ -547,11 +558,12 @@ describe('Unit test', function() {
     });
 
     describe('vNode', () => {
-        it('should get parentVNode', () => {
+        it('should get parentVNode of nested intact component', () => {
             const C = createIntactComponent(`<div>{self.get('children')}</div>`, {
                 displayName: 'C',
                 _mount() {
                     expect(this.parentVNode === undefined).to.be.true;
+                    console.log(this.element.innerHTML);
                 }
             });
             const D = createIntactComponent('<span>test</span>', {
@@ -574,14 +586,52 @@ describe('Unit test', function() {
                     expect(this.parentVNode.tag === 'div').to.be.true;
                     expect(this.parentVNode.parentVNode.tag === C).to.be.true;
                     expect(this.parentVNode.parentVNode.children).be.an.instanceof(C);
-                }
+                },
+                displayName: 'F',
+            });
+            const G = createIntactComponent('<b>g</b>', {
+                _mount() {
+                    expect(this.parentVNode.parentVNode.tag === ChildrenIntactComponent).to.be.true;
+                },
+                displayName: 'G',
             });
 
             const instance = renderApp(function() {
-                return <C>
-                    <p><E><b><D /></b></E></p>
-                    <F />
-                </C>
+                return <div>
+                    <C>
+                        <p><E><b><D /></b></E></p>
+                        <F />
+                        <ChildrenIntactComponent><G /></ChildrenIntactComponent>
+                    </C>
+                    <ChildrenIntactComponent><div>aaa</div></ChildrenIntactComponent>
+                </div>
+            });
+        });
+
+        it('should get parentVNode which return by functional component', () => {
+            const h = Intact.Vdt.miss.h;
+            const C = Intact.functionalWrapper((props) => {
+                return h(D, props);
+            });
+            const D = createIntactComponent(`<div>test</div>`, {
+                displayName: 'D',
+                _mount() {
+                    expect(this.parentVNode.tag === E).to.be.true;
+                }
+            });
+            D.displayName = 'D';
+            const E = createIntactComponent(`<div>{self.get('children')}</div>`, {
+                displayName: 'E',
+            });
+            E.displayName = 'E';
+            const instance = renderApp(function() {
+                return (
+                    <ChildrenIntactComponent>
+                        <E>
+                            <C />
+                        </E>
+                    </ChildrenIntactComponent>
+                )
             });
         });
 

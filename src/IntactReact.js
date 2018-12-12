@@ -3,12 +3,10 @@ import React from 'react';
 import Intact from 'intact/dist';
 import {normalizeProps, normalizeChildren} from './normalize'
 import functionalWrapper from './functionalWrapper';
-import FakePromise, {promises, pushStack, popStack} from './FakePromise'; 
+import FakePromise from './FakePromise'; 
 
 const {noop, isArray, isObject} = Intact.utils;
 const h = Intact.Vdt.miss.h;
-
-let mountedQueue;
 
 class IntactReact extends Intact {
     static functionalWrapper = functionalWrapper;
@@ -24,6 +22,9 @@ class IntactReact extends Intact {
             const normalizedProps = normalizeProps(props, context, parentRef);
             super(normalizedProps);
             parentRef.instance = this;
+
+            this.promises = context.promises || [];
+            this.mountedQueue = context.parent && context.parent.mountedQueue;
 
             // fake the vNode
             this.vNode = h(this.constructor, normalizedProps);
@@ -42,6 +43,7 @@ class IntactReact extends Intact {
     getChildContext() {
         return {
             parent: this,
+            promises: this.promises,
         };
     }
 
@@ -69,25 +71,53 @@ class IntactReact extends Intact {
         }
     }
 
-    init(...args) {
-        if (!this._isReact) return super.init(...args);
-
-        mountedQueue = this.mountedQueue;
-        return super.init(...args);
+    init(lastVNode, nextVNode) {
+        this.__pushGetChildContext(nextVNode);
+        const element = super.init(lastVNode, nextVNode);
+        this.__popGetChildContext();
+        return element;
     }
 
-    update(...args) {
-        if (!this._isReact) return super.update(...args);
+    update(lastVNode, nextVNode, fromPending) {
+        const update = () => {
+            this.__pushGetChildContext(nextVNode);
+            const element = super.update(lastVNode, nextVNode, fromPending);
+            this.__popGetChildContext();
+            return element;
+        }
+
+        if (!this._isReact) return update();
 
         const oldTriggerFlag = this._shouldTrigger;
         this.__initMountedQueue();
 
-        const element = super.update(...args);
+        const element = update();
 
         this.__triggerMountedQueue();
         this._shouldTrigger = oldTriggerFlag;
 
         return element;
+    }
+
+    __pushGetChildContext(nextVNode) {
+        const parentRef = nextVNode && nextVNode.props.parentRef;
+        const parentInstance = parentRef && parentRef.instance;
+        if (parentInstance)  {
+            const self = this;
+            this.__getChildContext = parentInstance.getChildContext;
+            parentInstance.getChildContext = function() {
+                const context = self.__getChildContext.call(this);
+                return {...context, parent: self};
+            };
+        }
+
+        this.__parentInstance = parentInstance;
+    }
+
+    __popGetChildContext() {
+        if (this.__parentInstance) {
+            this.__parentInstance.getChildContext = this.__getChildContext;
+        }
     }
 
     componentDidMount() {
@@ -166,27 +196,33 @@ class IntactReact extends Intact {
     // we should promise that all intact components have been mounted
     __initMountedQueue() {
         this._shouldTrigger = false;
-        if (!mountedQueue || mountedQueue.done) {
-            this._shouldTrigger = true;
-            if (!this.mountedQueue || this.mountedQueue.done) {
-                this._initMountedQueue();
+        if (!this.mountedQueue || this.mountedQueue.done) {
+            // get from parent
+            let tmp;
+            if ((tmp = this.context) && (tmp = tmp.parent) && (tmp = tmp.mountedQueue)) {
+                if (!tmp.done) {
+                    this.mountedQueue = tmp;
+                    return;
+                }
             }
-            mountedQueue = this.mountedQueue;
-            pushStack();
-        } else {
-            this.mountedQueue = mountedQueue;
+            this._shouldTrigger = true;
+            this._initMountedQueue();
         }
     }
 
     __triggerMountedQueue() {
         if (this._shouldTrigger) {
-            FakePromise.all(promises).then(() => {
+            FakePromise.all(this.promises).then(() => {
                 this._triggerMountedQueue();
             });
-            mountedQueue = null;
             this._shouldTrigger = false;
-            popStack();
         }
+    }
+
+    __pushActiveInstance() {
+        const o = this._activeReactInstance;
+        this._activeReactInstance = activeIntactReactInstance;
+
     }
 }
 
@@ -196,9 +232,11 @@ IntactReact.prototype.isReactComponent = {};
 IntactReact.contextTypes = {
     _context: noop,
     parent: noop,
+    promises: noop,
 };
 IntactReact.childContextTypes = {
-    parent: noop
+    parent: noop,
+    promises: noop,
 };
 
 export default IntactReact

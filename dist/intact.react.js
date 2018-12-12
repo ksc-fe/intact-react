@@ -96,7 +96,7 @@ var FakePromise = function () {
         classCallCheck(this, FakePromise);
 
         this.resolved = false;
-        this.callback = undefined;
+        this.callbacks = [];
         callback.call(this, function () {
             return _this.resolve();
         });
@@ -104,13 +104,16 @@ var FakePromise = function () {
 
     FakePromise.prototype.resolve = function resolve() {
         this.resolved = true;
-        this.callback && this.callback();
+        var cb = void 0;
+        while (cb = this.callbacks.shift()) {
+            cb();
+        }
     };
 
     FakePromise.prototype.then = function then(cb) {
-        this.callback = cb;
+        this.callbacks.push(cb);
         if (this.resolved) {
-            this.callback();
+            this.resolve();
         }
     };
 
@@ -121,35 +124,52 @@ FakePromise.all = function (promises) {
     var count = promises.length;
     var resolvedCount = 0;
     var callback = void 0;
+    var resolved = false;
+    var done = false;
 
     promises.forEach(function (p) {
         p.then(function () {
             resolvedCount++;
-            if (count === resolvedCount) {
-                callback && callback();
+            console.log(count, resolvedCount, promises.length, promises);
+            if (promises.length === resolvedCount) {
+                resolved = true;
+                if (done) debugger;
+                if (callback) {
+                    done = true;
+                    callback();
+                }
             }
         });
     });
 
+    var push = promises.push;
+    promises.push = function (p) {
+        if (!done) {
+            p.then(function () {
+                resolvedCount++;
+                console.log(count, resolvedCount, promises.length, promises);
+                if (promises.length === resolvedCount) {
+                    resolved = true;
+                    if (done) debugger;
+                    if (callback) {
+                        done = true;
+                        callback();
+                    }
+                }
+            });
+        }
+        push.call(promises, p);
+    };
+
     return {
         then: function then(cb) {
             callback = cb;
-            if (!count) {
+            if (!count || resolved) {
                 callback();
             }
         }
     };
 };
-
-var promises = [];
-var stacks = [];
-function pushStack() {
-    stacks.push(promises);
-    promises = [];
-}
-function popStack() {
-    promises = stacks.pop();
-}
 
 // wrap the react element to render it by react self
 
@@ -188,16 +208,41 @@ var Wrapper = function () {
         var _this = this;
 
         var vNode = this._addProps(nextVNode);
+        console.log('_start', vNode.type);
 
         var parentComponent = nextVNode.props.parentRef.instance;
+        if (parentComponent) {
+            if (!parentComponent._reactInternalFiber) {
+                // is a firsthand intact component, get its parent instance
+                parentComponent = parentComponent.get('parentRef').instance;
+            }
+        } else {
+            // maybe the property which value is vNodes
+            // find the closest IntactReact instance
+            var parentVNode = nextVNode.parentVNode;
+            while (parentVNode) {
+                var children = parentVNode.children;
+                if (children && children._reactInternalFiber !== undefined) {
+                    parentComponent = children;
+                    break;
+                }
+                parentVNode = parentVNode.parentVNode;
+            }
+        }
         var promise = new FakePromise(function (resolve) {
             if (parentComponent && parentComponent._reactInternalFiber !== undefined) {
-                ReactDOM.unstable_renderSubtreeIntoContainer(parentComponent, vNode, _this.placeholder, resolve);
+                ReactDOM.unstable_renderSubtreeIntoContainer(parentComponent, vNode, _this.placeholder, function () {
+                    console.log('_end', vNode.type);
+                    resolve();
+                });
             } else {
-                ReactDOM.render(vNode, _this.placeholder, resolve);
+                ReactDOM.render(vNode, _this.placeholder, function () {
+                    console.log('_end', vNode.type);
+                    resolve();
+                });
             }
         });
-        promises.push(promise);
+        parentComponent.promises.push(promise);
     };
 
     // we can change props in intact, so we should sync the changes
@@ -281,7 +326,7 @@ function normalize(vNode, parentRef) {
     }
     // normalizde the firsthand intact component to let intact access its children
     if (vNode.type && vNode.type.$$cid === 'IntactReact') {
-        return h$1(vNode.type, normalizeProps(vNode.props, { _context: vNode._owner && vNode._owner.stateNode }, parentRef, vNode.key), null, null, vNode.key, vNode.ref);
+        return h$1(vNode.type, normalizeProps(_extends({}, vNode.props, { parentRef: parentRef }), { _context: vNode._owner && vNode._owner.stateNode }, parentRef, vNode.key), null, null, vNode.key, vNode.ref);
     }
 
     // only wrap the react host element
@@ -421,7 +466,7 @@ var isObject = _Intact$utils.isObject;
 
 var h = Intact.Vdt.miss.h;
 
-var mountedQueue = void 0;
+var activeIntactReactInstance = void 0;
 
 var IntactReact = function (_Intact) {
     inherits(IntactReact, _Intact);
@@ -437,6 +482,9 @@ var IntactReact = function (_Intact) {
             var _this = possibleConstructorReturn(this, _Intact.call(this, normalizedProps));
 
             parentRef.instance = _this;
+            console.log('context', context);
+            _this.promises = context.promises || [];
+            _this.mountedQueue = context.mountedQueue;
 
             // fake the vNode
             _this.vNode = h(_this.constructor, normalizedProps);
@@ -447,6 +495,7 @@ var IntactReact = function (_Intact) {
             _this._props = _this.props;
             delete _this.props;
             _this._isReact = true;
+            activeIntactReactInstance = _this;
         } else {
             var _this = possibleConstructorReturn(this, _Intact.call(this, props));
         }
@@ -455,7 +504,9 @@ var IntactReact = function (_Intact) {
 
     IntactReact.prototype.getChildContext = function getChildContext() {
         return {
-            parent: this
+            parent: this,
+            promises: this.promises,
+            mountedQueue: this.mountedQueue
         };
     };
 
@@ -499,32 +550,68 @@ var IntactReact = function (_Intact) {
         }
     };
 
-    IntactReact.prototype.init = function init() {
-        var _Intact$prototype$ini, _Intact$prototype$ini2;
+    IntactReact.prototype.init = function init(lastVNode, nextVNode) {
+        var _this2 = this;
 
-        for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-            args[_key3] = arguments[_key3];
-        }
+        var init = function init() {
+            // const p = pushStack();
+            // pushStack();
+            console.log('start', _this2);
+            var parentRef = nextVNode.props.parentRef;
+            var parentInstance = parentRef && parentRef.instance;
+            var getChildContext = void 0;
+            if (parentInstance) {
+                var self = _this2;
+                getChildContext = parentInstance.getChildContext;
+                parentInstance.getChildContext = function () {
+                    var context = getChildContext.call(this);
+                    return _extends({}, context, { parent: self });
+                };
+            }
+            var element = _Intact.prototype.init.call(_this2, lastVNode, nextVNode);
+            console.log('end_start', _this2);
+            if (parentInstance) {
+                parentInstance.getChildContext = getChildContext;
+            }
+            return element;
+        };
+        if (!this._isReact) return init();
 
-        if (!this._isReact) return (_Intact$prototype$ini = _Intact.prototype.init).call.apply(_Intact$prototype$ini, [this].concat(args));
-
-        mountedQueue = this.mountedQueue;
-        return (_Intact$prototype$ini2 = _Intact.prototype.init).call.apply(_Intact$prototype$ini2, [this].concat(args));
+        return init();
     };
 
-    IntactReact.prototype.update = function update() {
-        var _Intact$prototype$upd, _Intact$prototype$upd2;
+    IntactReact.prototype.update = function update(lastVNode, nextVNode, fromPending) {
+        var _this3 = this;
 
-        for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-            args[_key4] = arguments[_key4];
-        }
+        var update = function update() {
+            // const p = pushStack();
+            // pushStack();
+            console.log('start', _this3);
+            var parentRef = nextVNode && nextVNode.props.parentRef;
+            var parentInstance = parentRef && parentRef.instance;
+            var getChildContext = void 0;
+            if (parentInstance) {
+                var self = _this3;
+                getChildContext = parentInstance.getChildContext;
+                parentInstance.getChildContext = function () {
+                    var context = getChildContext.call(this);
+                    return _extends({}, context, { parent: self });
+                };
+            }
+            var element = _Intact.prototype.update.call(_this3, lastVNode, nextVNode, fromPending);
+            console.log('end_start', _this3);
+            if (parentInstance) {
+                parentInstance.getChildContext = getChildContext;
+            }
+            return element;
+        };
 
-        if (!this._isReact) return (_Intact$prototype$upd = _Intact.prototype.update).call.apply(_Intact$prototype$upd, [this].concat(args));
+        if (!this._isReact) return update();
 
         var oldTriggerFlag = this._shouldTrigger;
         this.__initMountedQueue();
 
-        var element = (_Intact$prototype$upd2 = _Intact.prototype.update).call.apply(_Intact$prototype$upd2, [this].concat(args));
+        var element = update();
 
         this.__triggerMountedQueue();
         this._shouldTrigger = oldTriggerFlag;
@@ -533,7 +620,7 @@ var IntactReact = function (_Intact) {
     };
 
     IntactReact.prototype.componentDidMount = function componentDidMount() {
-        var _this2 = this;
+        var _this4 = this;
 
         var oldTriggerFlag = this._shouldTrigger;
         this.__initMountedQueue();
@@ -559,11 +646,13 @@ var IntactReact = function (_Intact) {
 
         // add mount lifecycle method to queue
         this.mountedQueue.push(function () {
-            _this2.mount();
+            _this4.mount();
         });
 
+        // this.promise.then(() => {
         this.__triggerMountedQueue();
         this._shouldTrigger = oldTriggerFlag;
+        // });
     };
 
     IntactReact.prototype.componentWillUnmount = function componentWillUnmount() {
@@ -591,6 +680,7 @@ var IntactReact = function (_Intact) {
     };
 
     IntactReact.prototype.render = function render() {
+        console.log('render', this);
         return React.createElement('i', {
             ref: this.__ref
         });
@@ -599,29 +689,36 @@ var IntactReact = function (_Intact) {
     // we should promise that all intact components have been mounted
     IntactReact.prototype.__initMountedQueue = function __initMountedQueue() {
         this._shouldTrigger = false;
-        if (!mountedQueue || mountedQueue.done) {
+        if (!this.mountedQueue || this.mountedQueue.done) {
             this._shouldTrigger = true;
-            if (!this.mountedQueue || this.mountedQueue.done) {
-                this._initMountedQueue();
-            }
-            mountedQueue = this.mountedQueue;
-            pushStack();
+            // if (!this.mountedQueue || this.mountedQueue.done) {
+            this._initMountedQueue();
+            // }
+            // mountedQueue = this.mountedQueue;
+            // pushStack();
+            console.log("_initMountedQueue", this);
         } else {
-            this.mountedQueue = mountedQueue;
+            // this.mountedQueue = mountedQueue;
         }
     };
 
     IntactReact.prototype.__triggerMountedQueue = function __triggerMountedQueue() {
-        var _this3 = this;
+        var _this5 = this;
 
         if (this._shouldTrigger) {
-            FakePromise.all(promises).then(function () {
-                _this3._triggerMountedQueue();
+            FakePromise.all(this.promises).then(function () {
+                _this5._triggerMountedQueue();
+                console.log("_triggerMountedQueue", _this5);
             });
-            mountedQueue = null;
+            // mountedQueue = null;
             this._shouldTrigger = false;
-            popStack();
+            // popStack();
         }
+    };
+
+    IntactReact.prototype.__pushActiveInstance = function __pushActiveInstance() {
+        var o = this._activeReactInstance;
+        this._activeReactInstance = activeIntactReactInstance;
     };
 
     createClass(IntactReact, [{
@@ -643,10 +740,14 @@ IntactReact.prototype.isReactComponent = {};
 // for getting _context in Intact
 IntactReact.contextTypes = {
     _context: noop,
-    parent: noop
+    parent: noop,
+    promises: noop,
+    mountedQueue: noop
 };
 IntactReact.childContextTypes = {
-    parent: noop
+    parent: noop,
+    promises: noop,
+    mountedQueue: noop
 };
 
 return IntactReact;
