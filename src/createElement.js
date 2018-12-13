@@ -1,4 +1,6 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
+import IntactReact from './IntactReact';
 
 // let React don't validate Intact component's props
 const _createElement = React.createElement;
@@ -17,3 +19,13 @@ export default function createElement(type, props, children) {
 }
 
 React.createElement = createElement;
+
+// let findDOMNode to get the element of intact component
+const _findDOMNode = ReactDOM.findDOMNode;
+ReactDOM.findDOMNode = function(component) {
+    if (component instanceof IntactReact) {
+        return component.element;
+    }
+
+    return _findDOMNode.call(ReactDOM, component);
+};

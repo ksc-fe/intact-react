@@ -234,8 +234,6 @@ describe('Unit test', function() {
             expect(instance1.element).to.eql(instance2.element);
         });
 
-
-
         describe('_context', () => {
             let instance;
             let C;
@@ -766,5 +764,20 @@ describe('Unit test', function() {
                 return <C first={true}><C key="a">test</C></C>
             });
         })
+    });
+
+    it('ReactDom.findDOMNode', () => {
+        const refs = {};
+        render(<div>
+            <ChildrenIntactComponent ref={i => refs.a = i}>
+                <div>test</div>
+            </ChildrenIntactComponent> 
+            <SimpleReactComponent ref={i => refs.b = i}>
+                <ChildrenIntactComponent ref={i => refs.c = i}>test</ChildrenIntactComponent>
+            </SimpleReactComponent>
+        </div>);
+        expect(ReactDOM.findDOMNode(refs.a).outerHTML).to.eql('<div><div>test</div></div>');
+        expect(ReactDOM.findDOMNode(refs.b).outerHTML).to.eql('<div><div>test</div></div>');
+        expect(ReactDOM.findDOMNode(refs.c).outerHTML).to.eql('<div>test</div>');
     });
 });

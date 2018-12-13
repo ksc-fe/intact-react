@@ -264,7 +264,7 @@ var Wrapper = function () {
         var _props = void 0;
         for (var key in props) {
             if (key === 'reactVNode' || key === 'parentRef') continue;
-            // ignore _evClick _evMouseEnter property which add in some component temporarily
+            // ignore _evClick _evMouseEnter property which add in some components temporarily
             if (ignorePropRegExp.test(key)) continue;
             if (!cloneVNode) {
                 cloneVNode = _extends({}, props.reactVNode);
@@ -308,6 +308,16 @@ function createElement(type, props, children) {
 }
 
 React.createElement = createElement;
+
+// let findDOMNode to get the element of intact component
+var _findDOMNode = ReactDOM.findDOMNode;
+ReactDOM.findDOMNode = function (component) {
+    if (component instanceof IntactReact) {
+        return component.element;
+    }
+
+    return _findDOMNode.call(ReactDOM, component);
+};
 
 var _Intact$Vdt$miss = Intact.Vdt.miss;
 var h$1 = _Intact$Vdt$miss.h;

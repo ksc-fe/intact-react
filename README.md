@@ -1,7 +1,7 @@
 # IntactReact
 
 > - 在react 项目中运行intact组件
-> - 理论上支持所有react 版本 , 本项目测试用例使用`react 16`
+> - 本项目测试用例使用`react 16`
 
 
 ### 使用方式
@@ -76,6 +76,6 @@ ReactDOM.render(
 
 ### 注意
 
-- **`intact` 对应的 `$change:value` 使用react props `on$change-value`,对应的 `$changed:value` 使用 react props `on$changed-value` , `$change`==>`on$change`  `$changed`==>`on$changed`
-- **不支持`ReactDOMServer` , 不支持`ReactDOM.hydrate`,  不支持`ReactDOM.findDOMNode` 请使用ref 代替**
-- **react 添加 block 支持, 例如：`<b:block></b:block>`对应为React属性`b-block`, `<b:block params="a">`对应为React属性`b-block={(a) => {}}`
+- `intact` 对应的 `$change:value` 使用react props `on$change-value`,对应的 `$changed:value` 使用 react props `on$changed-value` , `$change`==>`on$change`  `$changed`==>`on$changed`
+- 不支持`ReactDOMServer` , 不支持`ReactDOM.hydrate`
+- react 添加 block 支持, 例如：`<b:block></b:block>`对应为React属性`b-block`, `<b:block params="a">`对应为React属性`b-block={(a) => {}}`
