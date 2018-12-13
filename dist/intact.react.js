@@ -172,6 +172,8 @@ FakePromise.all = function (promises) {
     };
 };
 
+var ignorePropRegExp = /_ev[A-Z]/;
+
 // wrap the react element to render it by react self
 
 var Wrapper = function () {
@@ -264,6 +266,8 @@ var Wrapper = function () {
         var _props = void 0;
         for (var key in props) {
             if (key === 'reactVNode' || key === 'parentRef') continue;
+            // ignore _evClick _evMouseEnter property which add in some component temporarily
+            if (ignorePropRegExp.test(key)) continue;
             if (!cloneVNode) {
                 cloneVNode = _extends({}, props.reactVNode);
                 _props = cloneVNode.props = _extends({}, cloneVNode.props);

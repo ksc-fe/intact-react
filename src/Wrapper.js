@@ -1,6 +1,8 @@
 import ReactDOM from 'react-dom';
 import FakePromise from './FakePromise';
 
+const ignorePropRegExp = /_ev[A-Z]/;
+
 // wrap the react element to render it by react self
 export default class Wrapper {
     init(lastVNode, nextVNode) {
@@ -89,6 +91,8 @@ export default class Wrapper {
         let _props;
         for (let key in props) {
             if (key === 'reactVNode' || key === 'parentRef') continue;
+            // ignore _evClick _evMouseEnter property which add in some components temporarily
+            if (ignorePropRegExp.test(key)) continue;
             if (!cloneVNode) {
                 cloneVNode = {...props.reactVNode};
                 _props = cloneVNode.props = {...cloneVNode.props};
