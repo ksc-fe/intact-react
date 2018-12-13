@@ -88,13 +88,11 @@ class IntactReact extends Intact {
 
         if (!this._isReact) return update();
 
-        const oldTriggerFlag = this._shouldTrigger;
         this.__initMountedQueue();
 
         const element = update();
 
         this.__triggerMountedQueue();
-        this._shouldTrigger = oldTriggerFlag;
 
         return element;
     }
@@ -121,7 +119,6 @@ class IntactReact extends Intact {
     }
 
     componentDidMount() {
-        const oldTriggerFlag = this._shouldTrigger;
         this.__initMountedQueue();
 
         // disable intact async component
@@ -149,7 +146,6 @@ class IntactReact extends Intact {
         });
 
         this.__triggerMountedQueue();
-        this._shouldTrigger = oldTriggerFlag;
     }
 
     componentWillUnmount() {
@@ -157,7 +153,6 @@ class IntactReact extends Intact {
     }
 
     componentDidUpdate() {
-        const oldTriggerFlag = this._shouldTrigger;
         this.__initMountedQueue();
 
         const vNode = h(
@@ -176,7 +171,6 @@ class IntactReact extends Intact {
         this.update(lastVNode, vNode);
 
         this.__triggerMountedQueue();
-        this._shouldTrigger = oldTriggerFlag;
     }
 
     __ref(element) {
@@ -195,6 +189,7 @@ class IntactReact extends Intact {
 
     // we should promise that all intact components have been mounted
     __initMountedQueue() {
+        this.__oldTriggerFlag = this._shouldTrigger;
         this._shouldTrigger = false;
         if (!this.mountedQueue || this.mountedQueue.done) {
             // get from parent
@@ -215,14 +210,8 @@ class IntactReact extends Intact {
             FakePromise.all(this.promises).then(() => {
                 this._triggerMountedQueue();
             });
-            this._shouldTrigger = false;
         }
-    }
-
-    __pushActiveInstance() {
-        const o = this._activeReactInstance;
-        this._activeReactInstance = activeIntactReactInstance;
-
+        this._shouldTrigger = this.__oldTriggerFlag;
     }
 }
 

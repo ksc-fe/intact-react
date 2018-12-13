@@ -219,6 +219,23 @@ describe('Unit test', function() {
             expect(container.innerHTML).to.eql('<div>test</div>');
         });
 
+        it('render inatct component which return the react children directly', () => {
+            const C = createIntactComponent(`return self.get('children');<div></div>`);
+            let instance1;
+            let instance2;
+            render(
+                <C ref={(i) => {instance1 = i}}>
+                    <C ref={(i) => {instance2 = i}}>
+                        <div>test</div>
+                    </C>
+                </C>
+            );
+            expect(instance1.element.outerHTML).to.eql('<div>test</div>');
+            expect(instance1.element).to.eql(instance2.element);
+        });
+
+
+
         describe('_context', () => {
             let instance;
             let C;

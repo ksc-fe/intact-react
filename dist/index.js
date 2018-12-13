@@ -228,11 +228,23 @@ var Wrapper = function () {
             }
         }
         var promise = new FakePromise(function (resolve) {
-            if (parentComponent && parentComponent._reactInternalFiber !== undefined) {
-                ReactDOM.unstable_renderSubtreeIntoContainer(parentComponent, vNode, _this.placeholder, resolve);
-            } else {
-                ReactDOM.render(vNode, _this.placeholder, resolve);
-            }
+            // the parentComponent should always be valid
+            // if (parentComponent && parentComponent._reactInternalFiber !== undefined) {
+            ReactDOM.unstable_renderSubtreeIntoContainer(parentComponent, vNode, _this.placeholder, function () {
+                // if the parentVNode is a Intact component, it indicates that
+                // the Wrapper node is returned by parent component directly
+                // in this case we must fix the element property of parent component
+                var dom = ReactDOM.findDOMNode(this);
+                var parentVNode = nextVNode.parentVNode;
+                while (parentVNode && parentVNode.tag && parentVNode.tag.$$cid === 'IntactReact') {
+                    parentVNode.children.element = dom;
+                    parentVNode = parentVNode.parentVNode;
+                }
+                resolve();
+            });
+            // } else {
+            // ReactDOM.render(vNode, this.placeholder, resolve);
+            // }
         });
         parentComponent.promises.push(promise);
     };
@@ -557,13 +569,11 @@ var IntactReact = function (_Intact) {
 
         if (!this._isReact) return update();
 
-        var oldTriggerFlag = this._shouldTrigger;
         this.__initMountedQueue();
 
         var element = update();
 
         this.__triggerMountedQueue();
-        this._shouldTrigger = oldTriggerFlag;
 
         return element;
     };
@@ -592,7 +602,6 @@ var IntactReact = function (_Intact) {
     IntactReact.prototype.componentDidMount = function componentDidMount() {
         var _this3 = this;
 
-        var oldTriggerFlag = this._shouldTrigger;
         this.__initMountedQueue();
 
         // disable intact async component
@@ -620,7 +629,6 @@ var IntactReact = function (_Intact) {
         });
 
         this.__triggerMountedQueue();
-        this._shouldTrigger = oldTriggerFlag;
     };
 
     IntactReact.prototype.componentWillUnmount = function componentWillUnmount() {
@@ -628,7 +636,6 @@ var IntactReact = function (_Intact) {
     };
 
     IntactReact.prototype.componentDidUpdate = function componentDidUpdate() {
-        var oldTriggerFlag = this._shouldTrigger;
         this.__initMountedQueue();
 
         var vNode = h(this.constructor, normalizeProps(this.props, this.context, { instance: this }));
@@ -640,7 +647,6 @@ var IntactReact = function (_Intact) {
         this.update(lastVNode, vNode);
 
         this.__triggerMountedQueue();
-        this._shouldTrigger = oldTriggerFlag;
     };
 
     IntactReact.prototype.__ref = function __ref(element) {
@@ -655,6 +661,7 @@ var IntactReact = function (_Intact) {
 
     // we should promise that all intact components have been mounted
     IntactReact.prototype.__initMountedQueue = function __initMountedQueue() {
+        this.__oldTriggerFlag = this._shouldTrigger;
         this._shouldTrigger = false;
         if (!this.mountedQueue || this.mountedQueue.done) {
             // get from parent
@@ -677,13 +684,8 @@ var IntactReact = function (_Intact) {
             FakePromise.all(this.promises).then(function () {
                 _this4._triggerMountedQueue();
             });
-            this._shouldTrigger = false;
         }
-    };
-
-    IntactReact.prototype.__pushActiveInstance = function __pushActiveInstance() {
-        var o = this._activeReactInstance;
-        this._activeReactInstance = activeIntactReactInstance;
+        this._shouldTrigger = this.__oldTriggerFlag;
     };
 
     createClass(IntactReact, [{

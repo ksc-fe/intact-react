@@ -52,16 +52,28 @@ export default class Wrapper {
             }
         }
         const promise = new FakePromise(resolve => {
-            if (parentComponent && parentComponent._reactInternalFiber !== undefined) {
+            // the parentComponent should always be valid
+            // if (parentComponent && parentComponent._reactInternalFiber !== undefined) {
                 ReactDOM.unstable_renderSubtreeIntoContainer(
                     parentComponent,
                     vNode,
                     this.placeholder,
-                    resolve
+                    function() {
+                        // if the parentVNode is a Intact component, it indicates that
+                        // the Wrapper node is returned by parent component directly
+                        // in this case we must fix the element property of parent component
+                        const dom = ReactDOM.findDOMNode(this);
+                        let parentVNode = nextVNode.parentVNode;
+                        while (parentVNode && parentVNode.tag && parentVNode.tag.$$cid === 'IntactReact') {
+                            parentVNode.children.element = dom;
+                            parentVNode = parentVNode.parentVNode;
+                        }
+                        resolve();
+                    }
                 );
-            } else {
-                ReactDOM.render(vNode, this.placeholder, resolve);
-            }
+            // } else {
+                // ReactDOM.render(vNode, this.placeholder, resolve);
+            // }
         });
         parentComponent.promises.push(promise);
     }
