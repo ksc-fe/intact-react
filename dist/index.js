@@ -395,9 +395,9 @@ function normalizeContext(context) {
         data: {
             get: function get$$1(name) {
                 if (name != null) {
-                    return _get(_context.state, name);
+                    return _get(_context.state || {}, name);
                 } else {
-                    return _context.state;
+                    return _context.state || {};
                 }
             },
             set: function set$$1(name, value) {
@@ -445,6 +445,7 @@ function getEventName(propName) {
 var _Intact$utils$2 = Intact.utils;
 var isStringOrNumber$1 = _Intact$utils$2.isStringOrNumber;
 var isArray$2 = _Intact$utils$2.isArray;
+var noop$1 = _Intact$utils$2.noop;
 
 // wrap the functional component of intact
 
@@ -464,6 +465,10 @@ function functionalWrapper(Component) {
             return Component(props);
         }
     }
+
+    Ctor.contextTypes = {
+        _context: noop$1
+    };
 
     return Ctor;
 }

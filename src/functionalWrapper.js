@@ -2,7 +2,7 @@ import Intact from 'intact/dist';
 import {normalizeProps} from './normalize';
 import createElement from './createElement';
 
-const {isStringOrNumber, isArray} = Intact.utils;
+const {isStringOrNumber, isArray, noop} = Intact.utils;
 
 // wrap the functional component of intact
 export default function functionalWrapper(Component) {
@@ -21,6 +21,10 @@ export default function functionalWrapper(Component) {
             return Component(props);
         }
     }
+
+    Ctor.contextTypes = {
+        _context: noop,
+    };
 
     return Ctor;
 }

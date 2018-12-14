@@ -270,6 +270,7 @@ describe('Unit test', function() {
             it('shoule get _context in functional component', () => {
                 const h = Intact.Vdt.miss.h;
                 C = Intact.functionalWrapper(function(props) {
+                    expect(props._context.data.get('value')).to.eql(1);
                     return h(createIntactComponent(`<div>{self.get('_context').data.get('value')}</div>`), props);
                 });
                 render(<App />);
@@ -779,5 +780,18 @@ describe('Unit test', function() {
         expect(ReactDOM.findDOMNode(refs.a).outerHTML).to.eql('<div><div>test</div></div>');
         expect(ReactDOM.findDOMNode(refs.b).outerHTML).to.eql('<div><div>test</div></div>');
         expect(ReactDOM.findDOMNode(refs.c).outerHTML).to.eql('<div>test</div>');
+    });
+
+    it('React.createRef', () => {
+        const ref1 = React.createRef();
+        const ref2 = React.createRef();
+        render(<div>
+            <ChildrenIntactComponent ref={ref1}>
+                <SimpleIntactComponent ref={ref2} />
+            </ChildrenIntactComponent>
+        </div>);
+        console.log(ref1, ref2);
+        expect(ref1.current).be.an.instanceof(ChildrenIntactComponent);
+        expect(ref2.current).be.an.instanceof(SimpleIntactComponent);
     });
 });
