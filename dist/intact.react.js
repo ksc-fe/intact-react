@@ -8,6 +8,22 @@ React = React && React.hasOwnProperty('default') ? React['default'] : React;
 Intact = Intact && Intact.hasOwnProperty('default') ? Intact['default'] : Intact;
 ReactDOM = ReactDOM && ReactDOM.hasOwnProperty('default') ? ReactDOM['default'] : ReactDOM;
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
+  return typeof obj;
+} : function (obj) {
+  return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+};
+
+
+
+
+
+
+
+
+
+
+
 var classCallCheck = function (instance, Constructor) {
   if (!(instance instanceof Constructor)) {
     throw new TypeError("Cannot call a class as a function");
@@ -326,7 +342,6 @@ var h$1 = _Intact$Vdt$miss.h;
 var VNode = _Intact$Vdt$miss.VNode;
 var _Intact$utils$1 = Intact.utils;
 var isFunction = _Intact$utils$1.isFunction;
-var isObject$1 = _Intact$utils$1.isObject;
 var isArray$1 = _Intact$utils$1.isArray;
 var isStringOrNumber = _Intact$utils$1.isStringOrNumber;
 var _set = _Intact$utils$1.set;
@@ -393,7 +408,7 @@ function normalizeProps(props, context, parentRef, key) {
 }
 
 function normalizeRef(ref) {
-    return isObject$1(ref) ? function (i) {
+    return (typeof ref === 'undefined' ? 'undefined' : _typeof(ref)) === 'object' && ref !== null ? function (i) {
         ref.current = i;
     } : ref;
 }

@@ -219,7 +219,7 @@ describe('Unit test', function() {
             expect(container.innerHTML).to.eql('<div>test</div>');
         });
 
-        it('render inatct component which return the react children directly', () => {
+        it('render intact component which return the react children directly', () => {
             const C = createIntactComponent(`return self.get('children');<div></div>`);
             let instance1;
             let instance2;

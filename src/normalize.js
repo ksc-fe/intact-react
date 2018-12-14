@@ -3,7 +3,7 @@ import Wrapper from './Wrapper';
 import createElement from './createElement';
 
 const {h, VNode} = Intact.Vdt.miss;
-const {isFunction, isObject, isArray, isStringOrNumber, set, get} = Intact.utils;
+const {isFunction, isArray, isStringOrNumber, set, get} = Intact.utils;
 
 export function normalize(vNode, parentRef) {
     if (vNode == null) return vNode;
@@ -73,7 +73,7 @@ export function normalizeProps(props, context, parentRef, key) {
 }
 
 export function normalizeRef(ref) {
-    return isObject(ref) ? (i) => {ref.current = i} : ref;
+    return typeof ref === 'object' && ref !== null ? (i) => {ref.current = i} : ref;
 }
 
 export function normalizeContext(context) {
