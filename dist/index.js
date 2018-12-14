@@ -324,6 +324,7 @@ var h$1 = _Intact$Vdt$miss.h;
 var VNode = _Intact$Vdt$miss.VNode;
 var _Intact$utils$1 = Intact.utils;
 var isFunction = _Intact$utils$1.isFunction;
+var isObject$1 = _Intact$utils$1.isObject;
 var isArray$1 = _Intact$utils$1.isArray;
 var isStringOrNumber = _Intact$utils$1.isStringOrNumber;
 var _set = _Intact$utils$1.set;
@@ -344,7 +345,7 @@ function normalize(vNode, parentRef) {
     }
     // normalizde the firsthand intact component to let intact access its children
     if (vNode.type && vNode.type.$$cid === 'IntactReact') {
-        return h$1(vNode.type, normalizeProps(_extends({}, vNode.props, { parentRef: parentRef }), { _context: vNode._owner && vNode._owner.stateNode }, parentRef, vNode.key), null, null, vNode.key, vNode.ref);
+        return h$1(vNode.type, normalizeProps(_extends({}, vNode.props, { parentRef: parentRef }), { _context: vNode._owner && vNode._owner.stateNode }, parentRef, vNode.key), null, null, vNode.key, normalizeRef(vNode.ref));
     }
 
     // only wrap the react host element
@@ -387,6 +388,12 @@ function normalizeProps(props, context, parentRef, key) {
     }
 
     return _props;
+}
+
+function normalizeRef(ref) {
+    return isObject$1(ref) ? function (i) {
+        ref.current = i;
+    } : ref;
 }
 
 function normalizeContext(context) {
