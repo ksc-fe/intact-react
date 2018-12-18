@@ -366,7 +366,7 @@ function normalize(vNode, parentRef) {
     }
 
     // only wrap the react host element
-    return h$1(Wrapper, { reactVNode: vNode, parentRef: parentRef });
+    return h$1(Wrapper, { reactVNode: vNode, parentRef: parentRef }, null, vNode.props.className);
 }
 
 function normalizeChildren(vNodes) {
