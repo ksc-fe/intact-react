@@ -35,7 +35,7 @@ export function normalize(vNode, parentRef) {
     }
 
     // only wrap the react host element
-    return h(Wrapper, {reactVNode: vNode, parentRef});
+    return h(Wrapper, {reactVNode: vNode, parentRef}, null, vNode.props.className);
 }
 
 export function normalizeChildren(vNodes, parentRef = {}) {
