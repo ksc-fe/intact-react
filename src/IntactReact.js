@@ -5,7 +5,7 @@ import {normalizeProps, normalizeChildren} from './normalize'
 import functionalWrapper from './functionalWrapper';
 import FakePromise from './FakePromise'; 
 
-const {noop, isArray, isObject} = Intact.utils;
+const {noop, isArray, isObject, extend} = Intact.utils;
 const h = Intact.Vdt.miss.h;
 
 class IntactReact extends Intact {
@@ -227,6 +227,11 @@ IntactReact.childContextTypes = {
     parent: noop,
     promises: noop,
 };
+
+// for compatibility of IE <= 10
+if (!Object.setPrototypeOf) {
+    extend(IntactReact, Intact);
+}
 
 export default IntactReact
 

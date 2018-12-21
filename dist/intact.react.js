@@ -510,6 +510,7 @@ var _Intact$utils = Intact.utils;
 var noop = _Intact$utils.noop;
 var isArray = _Intact$utils.isArray;
 var isObject = _Intact$utils.isObject;
+var extend = _Intact$utils.extend;
 
 var h = Intact.Vdt.miss.h;
 
@@ -757,6 +758,11 @@ IntactReact.childContextTypes = {
     parent: noop,
     promises: noop
 };
+
+// for compatibility of IE <= 10
+if (!Object.setPrototypeOf) {
+    extend(IntactReact, Intact);
+}
 
 return IntactReact;
 
