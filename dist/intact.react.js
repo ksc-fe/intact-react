@@ -762,6 +762,10 @@ IntactReact.childContextTypes = {
 // for compatibility of IE <= 10
 if (!Object.setPrototypeOf) {
     extend(IntactReact, Intact);
+    // for Intact <= 2.4.4
+    if (IntactReact.template) {
+        IntactReact.template = Intact.template;
+    }
 }
 
 return IntactReact;
