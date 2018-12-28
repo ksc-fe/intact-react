@@ -40,7 +40,7 @@
     "chai": "^4.2.0",
     "css-loader": "^1.0.1",
     "file-loader": "^2.0.0",
-    "intact": "^2.4.3",
+    "intact": "^2.4.6",
     "karma": "^3.0.0",
     "karma-chai": "^0.1.0",
     "karma-chrome-launcher": "^2.2.0",

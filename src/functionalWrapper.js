@@ -3,6 +3,7 @@ import {normalizeProps} from './normalize';
 import createElement from './createElement';
 
 const {isStringOrNumber, isArray, noop} = Intact.utils;
+export {noop, isArray};
 
 // wrap the functional component of intact
 export default function functionalWrapper(Component) {

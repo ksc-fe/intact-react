@@ -300,6 +300,18 @@ describe('Unit test', function() {
             expect(container.innerHTML).to.eql('<div>a: 2 b: </div>');
         });
 
+        it('update react element with string', () => {
+            const instance = renderApp(function() {
+                return (
+                    <ChildrenIntactComponent>
+                        {this.state.a === 1 ? <div>a</div> : 'b'}
+                    </ChildrenIntactComponent>
+                )
+            }, {a: 1});
+            instance.setState({a: 2});
+            expect(container.innerHTML).to.eql('<div>b</div>');
+        });
+
         it('update react element in intact component', () => {
             const instance = renderApp(function() {
                 return (
@@ -571,6 +583,31 @@ describe('Unit test', function() {
             });
             expect(mount.callCount).to.eql(1);
         });
+
+        it('componentWillUnmount will be called when remove the element by parent', () => {
+            const componentWillUnmount = sinon.spy(() => {
+                console.log('unmount')
+            });
+            class C extends React.Component {
+                render() {
+                    return <div>react</div>
+                }
+            }
+            Object.assign(C.prototype, {
+                componentWillUnmount,
+            });
+
+            const instance = renderApp(function() {
+                return <div>
+                    {this.state.a === 1 ?
+                        <ChildrenIntactComponent><C /></ChildrenIntactComponent> :
+                        <div>test</div>
+                    }
+                </div>
+            }, {a: 1});
+            instance.setState({a: 2});
+            expect(componentWillUnmount.callCount).to.eql(1);
+        })
     });
 
     describe('vNode', () => {

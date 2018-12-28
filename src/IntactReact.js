@@ -2,10 +2,10 @@ import React from 'react';
 // for webpack alias Intact to IntactReact
 import Intact from 'intact/dist';
 import {normalizeProps, normalizeChildren} from './normalize'
-import functionalWrapper from './functionalWrapper';
+import functionalWrapper, {noop, isArray} from './functionalWrapper';
 import FakePromise from './FakePromise'; 
 
-const {noop, isArray, isObject, extend} = Intact.utils;
+const {isObject, extend} = Intact.utils;
 const h = Intact.Vdt.miss.h;
 
 class IntactReact extends Intact {

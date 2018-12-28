@@ -1,5 +1,6 @@
 import ReactDOM from 'react-dom';
 import FakePromise from './FakePromise';
+import {noop} from './functionalWrapper';
 
 const ignorePropRegExp = /_ev[A-Z]/;
 
@@ -21,14 +22,13 @@ export default class Wrapper {
         return this.placeholder;
     }
 
-    destroy() {
-        // remove the placeholder after react has unmount it
+    destroy(lastVNode, nextVNode, parentDom) {
         const placeholder = this.placeholder;
-        placeholder._unmount = () => {
-            ReactDOM.render(null, placeholder, () => {
-                placeholder.parentNode.removeChild(placeholder);
-            });
-        }
+        // let react remove it, intact never remove it
+        ReactDOM.render(null, placeholder, () => {
+            placeholder.parentNode.removeChild(placeholder);
+        });
+        placeholder._unmount = noop;
     }
 
     _render(nextVNode) {

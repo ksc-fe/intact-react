@@ -186,6 +186,72 @@ FakePromise.all = function (promises) {
     };
 };
 
+// let React don't validate Intact component's props
+var _createElement = React.createElement;
+function createElement(type, props, children) {
+    var isIntact = type.$$cid === 'IntactReact';
+    var propTypes = type.propTypes;
+    if (isIntact && propTypes) {
+        type.propTypes = undefined;
+    }
+    var element = _createElement.apply(this, arguments);
+    if (isIntact && propTypes) {
+        type.propTypes = propTypes;
+    }
+
+    return element;
+}
+
+React.createElement = createElement;
+
+// let findDOMNode to get the element of intact component
+var _findDOMNode = ReactDOM.findDOMNode;
+ReactDOM.findDOMNode = function (component) {
+    if (component instanceof IntactReact) {
+        return component.element;
+    }
+
+    return _findDOMNode.call(ReactDOM, component);
+};
+
+var _Intact$utils$2 = Intact.utils;
+var isStringOrNumber$1 = _Intact$utils$2.isStringOrNumber;
+var isArray$1 = _Intact$utils$2.isArray;
+var noop = _Intact$utils$2.noop;
+
+// wrap the functional component of intact
+function functionalWrapper(Component) {
+    function Ctor(props, context) {
+        if (context) {
+            // invoked by React
+            var vNodes = Component(normalizeProps(props, context, {}), true);
+            if (isArray$1(vNodes)) {
+                return vNodes.map(function (vNode) {
+                    return normalizeIntactVNodeToReactVNode(vNode);
+                });
+            }
+            return normalizeIntactVNodeToReactVNode(vNodes);
+        } else {
+            // invoked by Intact
+            return Component(props);
+        }
+    }
+
+    Ctor.contextTypes = {
+        _context: noop
+    };
+
+    return Ctor;
+}
+
+function normalizeIntactVNodeToReactVNode(vNode) {
+    if (isStringOrNumber$1(vNode)) {
+        return vNode;
+    } else if (vNode) {
+        return createElement(vNode.tag, vNode.props, vNode.props.children || vNode.children);
+    }
+}
+
 var ignorePropRegExp = /_ev[A-Z]/;
 
 // wrap the react element to render it by react self
@@ -211,14 +277,13 @@ var Wrapper = function () {
         return this.placeholder;
     };
 
-    Wrapper.prototype.destroy = function destroy() {
-        // remove the placeholder after react has unmount it
+    Wrapper.prototype.destroy = function destroy(lastVNode, nextVNode, parentDom) {
         var placeholder = this.placeholder;
-        placeholder._unmount = function () {
-            ReactDOM.render(null, placeholder, function () {
-                placeholder.parentNode.removeChild(placeholder);
-            });
-        };
+        // let react remove it, intact never remove it
+        ReactDOM.render(null, placeholder, function () {
+            placeholder.parentNode.removeChild(placeholder);
+        });
+        placeholder._unmount = noop;
     };
 
     Wrapper.prototype._render = function _render(nextVNode) {
@@ -307,40 +372,13 @@ var eventsMap = {
     'ev-mouseleave': 'onMouseLeave'
 };
 
-// let React don't validate Intact component's props
-var _createElement = React.createElement;
-function createElement(type, props, children) {
-    var isIntact = type.$$cid === 'IntactReact';
-    var propTypes = type.propTypes;
-    if (isIntact && propTypes) {
-        type.propTypes = undefined;
-    }
-    var element = _createElement.apply(this, arguments);
-    if (isIntact && propTypes) {
-        type.propTypes = propTypes;
-    }
-
-    return element;
-}
-
-React.createElement = createElement;
-
-// let findDOMNode to get the element of intact component
-var _findDOMNode = ReactDOM.findDOMNode;
-ReactDOM.findDOMNode = function (component) {
-    if (component instanceof IntactReact) {
-        return component.element;
-    }
-
-    return _findDOMNode.call(ReactDOM, component);
-};
-
 var _Intact$Vdt$miss = Intact.Vdt.miss;
 var h$1 = _Intact$Vdt$miss.h;
 var VNode = _Intact$Vdt$miss.VNode;
+var Types = _Intact$Vdt$miss.Types;
 var _Intact$utils$1 = Intact.utils;
 var isFunction = _Intact$utils$1.isFunction;
-var isArray$1 = _Intact$utils$1.isArray;
+var isArray = _Intact$utils$1.isArray;
 var isStringOrNumber = _Intact$utils$1.isStringOrNumber;
 var _set = _Intact$utils$1.set;
 var _get = _Intact$utils$1.get;
@@ -348,8 +386,15 @@ var _get = _Intact$utils$1.get;
 
 function normalize(vNode, parentRef) {
     if (vNode == null) return vNode;
-    // handle string and number by intact directly
-    if (isStringOrNumber(vNode)) return vNode;
+    // if a element has one child which is string or number
+    // intact will set text content directly to update its children
+    // this will lead to that the parent of placholder wich return
+    // by Wrapper missing because of it has been removed, 
+    // so we should convert string or number child
+    // to VNode to let intact update it one by one
+    if (isStringOrNumber(vNode)) {
+        return new VNode(Types.Text, null, null, vNode);
+    }
     // maybe return by functional component
     if (vNode instanceof VNode) {
         // update parentRef
@@ -370,7 +415,7 @@ function normalize(vNode, parentRef) {
 function normalizeChildren(vNodes) {
     var parentRef = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-    if (isArray$1(vNodes)) {
+    if (isArray(vNodes)) {
         return vNodes.map(function (vNode) {
             return normalize(vNode, parentRef);
         });
@@ -464,49 +509,8 @@ function getEventName(propName) {
     }
 }
 
-var _Intact$utils$2 = Intact.utils;
-var isStringOrNumber$1 = _Intact$utils$2.isStringOrNumber;
-var isArray$2 = _Intact$utils$2.isArray;
-var noop$1 = _Intact$utils$2.noop;
-
-// wrap the functional component of intact
-
-function functionalWrapper(Component) {
-    function Ctor(props, context) {
-        if (context) {
-            // invoked by React
-            var vNodes = Component(normalizeProps(props, context, {}), true);
-            if (isArray$2(vNodes)) {
-                return vNodes.map(function (vNode) {
-                    return normalizeIntactVNodeToReactVNode(vNode);
-                });
-            }
-            return normalizeIntactVNodeToReactVNode(vNodes);
-        } else {
-            // invoked by Intact
-            return Component(props);
-        }
-    }
-
-    Ctor.contextTypes = {
-        _context: noop$1
-    };
-
-    return Ctor;
-}
-
-function normalizeIntactVNodeToReactVNode(vNode) {
-    if (isStringOrNumber$1(vNode)) {
-        return vNode;
-    } else if (vNode) {
-        return createElement(vNode.tag, vNode.props, vNode.props.children || vNode.children);
-    }
-}
-
 // for webpack alias Intact to IntactReact
 var _Intact$utils = Intact.utils;
-var noop = _Intact$utils.noop;
-var isArray = _Intact$utils.isArray;
 var isObject = _Intact$utils.isObject;
 var extend = _Intact$utils.extend;
 
