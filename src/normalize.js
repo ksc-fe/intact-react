@@ -2,13 +2,20 @@ import Intact from 'intact/dist';
 import Wrapper from './Wrapper';
 import createElement from './createElement';
 
-const {h, VNode} = Intact.Vdt.miss;
+const {h, VNode, Types} = Intact.Vdt.miss;
 const {isFunction, isArray, isStringOrNumber, set, get} = Intact.utils;
 
 export function normalize(vNode, parentRef) {
     if (vNode == null) return vNode;
-    // handle string and number by intact directly
-    if (isStringOrNumber(vNode)) return vNode;
+    // if a element has one child which is string or number
+    // intact will set text content directly to update its children
+    // this will lead to that the parent of placholder wich return
+    // by Wrapper missing because of it has been removed, 
+    // so we should convert string or number child
+    // to VNode to let intact update it one by one
+    if (isStringOrNumber(vNode)) {
+        return new VNode(Types.Text, null, null, vNode);
+    }
     // maybe return by functional component
     if (vNode instanceof VNode) {
         // update parentRef
