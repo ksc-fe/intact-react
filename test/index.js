@@ -794,4 +794,13 @@ describe('Unit test', function() {
         expect(ref1.current).be.an.instanceof(ChildrenIntactComponent);
         expect(ref2.current).be.an.instanceof(SimpleIntactComponent);
     });
+
+    it('ref conflict', () => {
+        const C = createIntactComponent(`<div ref="a">test</div>`, {
+            _mount() {
+                expect(this.refs.a.outerHTML).to.eql('<div>test</div>');
+            }
+        });
+        render(<div><C /></div>);
+    });
 });

@@ -593,6 +593,8 @@ var IntactReact = function (_Intact) {
     };
 
     IntactReact.prototype.init = function init(lastVNode, nextVNode) {
+        // react has changed the refs, so we reset it back
+        this.refs = this.vdt.widgets || {};
         this.__pushGetChildContext(nextVNode);
         var element = _Intact.prototype.init.call(this, lastVNode, nextVNode);
         this.__popGetChildContext();
