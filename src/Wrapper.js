@@ -11,6 +11,12 @@ export default class Wrapper {
         this.destroyed = true; 
         // react can use comment node as parent so long as its text like bellow
         this.placeholder = document.createComment(' react-mount-point-unstable ');
+        // we should append the placholder advanced,
+        // because when a intact component update itself
+        // the _render will update react element sync
+        if (this.parentDom) {
+            this.parentDom.appendChild(this.placeholder);
+        }
         this._render(nextVNode);
 
         return this.placeholder;
@@ -60,6 +66,7 @@ export default class Wrapper {
                     parentComponent,
                     vNode,
                     this.placeholder,
+                    // this.parentDom,
                     function() {
                         // if the parentVNode is a Intact component, it indicates that
                         // the Wrapper node is returned by parent component directly

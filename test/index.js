@@ -377,6 +377,21 @@ describe('Unit test', function() {
             });
             instance.i.set('v', 2);
         });
+
+        it('update intact component itself with react element', () => {
+            const C = createIntactComponent(`
+                <div ev-click={self.set.bind(self, 'show', !self.get('show'))}>
+                    <span v-if={self.get('show')}>intact</span>
+                    <div v-else>{self.get('children')}</div>
+                </div>
+            `);
+            const instance = renderApp(function() {
+                return <C><div>react</div></C>
+            });
+            container.firstChild.click();
+            container.firstChild.click();
+            expect(container.innerHTML).to.eql('<div><div><div>react</div></div></div>');
+        });
     });
 
     it('validate props in intact instead of react', () => {
