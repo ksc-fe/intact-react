@@ -205,6 +205,12 @@ describe('Unit test', function() {
             expect(container.innerHTML).to.eql('<div><div><div>1</div><div>2</div></div></div>');
         });
 
+        it('render block witch value is text node', () => {
+            const C = createIntactComponent(`<div><b:test/>{self.get('children')}</div>`);
+            render(<C b-test={<React.Fragment>test</React.Fragment>} />);
+            expect(container.innerHTML).to.eql('<div>test</div>');
+        });
+
         it('render intact functional component which has wrapped in intact component', () => {
             const h = Intact.Vdt.miss.h;
             const Component = Intact.functionalWrapper(function(props) {

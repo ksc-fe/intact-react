@@ -325,7 +325,8 @@ var Wrapper = function () {
                 // if the parentVNode is a Intact component, it indicates that
                 // the Wrapper node is returned by parent component directly
                 // in this case we must fix the element property of parent component
-                var dom = ReactDOM.findDOMNode(this);
+                // 3 is textNode
+                var dom = this && this.nodeType === 3 ? this : ReactDOM.findDOMNode(this);
                 var parentVNode = nextVNode.parentVNode;
                 while (parentVNode && parentVNode.tag && parentVNode.tag.$$cid === 'IntactReact') {
                     parentVNode.children.element = dom;
