@@ -547,6 +547,32 @@ describe('Unit test', function() {
             // expect(mount2.calledAfter(mount1)).be.true;
         });
 
+        it('lifecycle of mount of existing firsthand intact component', () => {
+            const mount = sinon.spy(function() {
+                console.log('mount');
+            });
+            const C = createIntactComponent(`<div>{self.get('show') ? self.get('children') : null}</div>`, {
+                _mount: mount
+            });
+            const instance = renderApp(function() {
+                return (
+                    <div>
+                        <ChildrenIntactComponent>
+                            <C ref={i => this.c = i}>
+                                <div>
+                                    <C show={true}>
+                                        <span>test</span>
+                                    </C>
+                                </div>
+                            </C>
+                        </ChildrenIntactComponent>
+                    </div>
+                )
+            });
+            // instance.setState({show: true});
+            window.i = instance;
+        });
+
         it('lifecycle of componentDidMount of nested react component in intact component', () => {
             const componentDidMount = sinon.spy(function() {
                 expect(document.body.contains(this.dom)).to.be.true;
@@ -628,7 +654,7 @@ describe('Unit test', function() {
             }, {a: 1});
             instance.setState({a: 2});
             expect(componentWillUnmount.callCount).to.eql(1);
-        })
+        });
     });
 
     describe('vNode', () => {
@@ -687,24 +713,51 @@ describe('Unit test', function() {
             const C = Intact.functionalWrapper((props) => {
                 return h(D, props);
             });
-            const D = createIntactComponent(`<div>test</div>`, {
+            const D = createIntactComponent(`<div>{self.get('children')}</div>`, {
                 displayName: 'D',
                 _mount() {
-                    expect(this.parentVNode.tag === E).to.be.true;
+                    debugger;
+                    // expect(this.parentVNode.tag === E).to.be.true;
                 }
             });
             D.displayName = 'D';
-            const E = createIntactComponent(`<div>{self.get('children')}</div>`, {
+            const E = createIntactComponent(`<div>{self.get('show') ? self.get('children') : null}</div>`, {
                 displayName: 'E',
+                _mount() {
+                    window.e = this;
+                    debugger;
+                }
             });
             E.displayName = 'E';
+            const F = createIntactComponent(`<div>test</div>`, {
+                _mount() {
+                    // update in updating
+                    e.update();
+
+                    debugger;
+                }
+            });
+            F.displayName = 'F';
             const instance = renderApp(function() {
                 return (
-                    <ChildrenIntactComponent>
+                    // <div>
+                        // <C className="a">
+                            // <ChildrenIntactComponent>
+                                // <E>
+                                    // <C className="b">
+                                        // <F />
+                                    // </C>
+                                // </E>
+                            // </ChildrenIntactComponent>
+                        // </C>
+                    // </div>
+                    <C className="a">
                         <E>
-                            <C />
+                            <C className="b">
+                                <F />
+                            </C>
                         </E>
-                    </ChildrenIntactComponent>
+                    </C>
                 )
             });
         });

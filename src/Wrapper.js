@@ -40,11 +40,11 @@ export default class Wrapper {
     _render(nextVNode) {
         const vNode = this._addProps(nextVNode);
 
-        let parentComponent = nextVNode.props.parentRef.instance;
+        let parentComponent = nextVNode.props._parentRef.instance;
         if (parentComponent) {
             if (!parentComponent._reactInternalFiber) {
                 // is a firsthand intact component, get its parent instance
-                parentComponent = parentComponent.get('parentRef').instance;
+                parentComponent = parentComponent.get('_parentRef').instance;
             }
         } else {
             // maybe the property which value is vNodes
@@ -85,7 +85,7 @@ export default class Wrapper {
                 // ReactDOM.render(vNode, this.placeholder, resolve);
             // }
         });
-        parentComponent.promises.push(promise);
+        parentComponent.__promises.push(promise);
     }
 
     // we can change props in intact, so we should sync the changes
@@ -98,7 +98,7 @@ export default class Wrapper {
         let cloneVNode;
         let _props;
         for (let key in props) {
-            if (key === 'reactVNode' || key === 'parentRef') continue;
+            if (key === 'reactVNode' || key === '_parentRef') continue;
             // ignore _evClick _evMouseEnter property which add in some components temporarily
             if (ignorePropRegExp.test(key)) continue;
             if (!cloneVNode) {

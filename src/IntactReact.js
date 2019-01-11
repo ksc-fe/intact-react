@@ -23,8 +23,8 @@ class IntactReact extends Intact {
             super(normalizedProps);
             parentRef.instance = this;
 
-            this.promises = context.promises || [];
-            this.mountedQueue = context.parent && context.parent.mountedQueue;
+            this.__promises = context.__promises || [];
+            this.mountedQueue = context.__parent && context.__parent.mountedQueue;
 
             // fake the vNode
             this.vNode = h(this.constructor, normalizedProps);
@@ -42,8 +42,8 @@ class IntactReact extends Intact {
 
     getChildContext() {
         return {
-            parent: this,
-            promises: this.promises,
+            __parent: this,
+            __promises: this.__promises,
         };
     }
 
@@ -82,9 +82,13 @@ class IntactReact extends Intact {
 
     update(lastVNode, nextVNode, fromPending) {
         const update = () => {
-            this.__pushGetChildContext(nextVNode);
+            if (this._updateCount === 0) {
+                this.__pushGetChildContext(nextVNode || this.vNode);
+            }
             const element = super.update(lastVNode, nextVNode, fromPending);
-            this.__popGetChildContext();
+            if (this._updateCount === 0) {
+                this.__popGetChildContext();
+            }
             return element;
         }
 
@@ -100,14 +104,14 @@ class IntactReact extends Intact {
     }
 
     __pushGetChildContext(nextVNode) {
-        const parentRef = nextVNode && nextVNode.props.parentRef;
+        const parentRef = nextVNode && nextVNode.props._parentRef;
         const parentInstance = parentRef && parentRef.instance;
         if (parentInstance)  {
             const self = this;
             this.__getChildContext = parentInstance.getChildContext;
             parentInstance.getChildContext = function() {
                 const context = self.__getChildContext.call(this);
-                return {...context, parent: self};
+                return {...context, __parent: self};
             };
         }
 
@@ -127,7 +131,7 @@ class IntactReact extends Intact {
         this.inited = true;
 
         // add parentVNode
-        this.parentVNode = this.vNode.parentVNode = this.context.parent && this.context.parent.vNode;
+        this.parentVNode = this.vNode.parentVNode = this.context.__parent && this.context.__parent.vNode;
 
         const dom = this.init(null, this.vNode);
         const parentElement = this._placeholder.parentElement;
@@ -168,7 +172,7 @@ class IntactReact extends Intact {
         const lastVNode = this.vNode;
         vNode.children = this;
         this.vNode = vNode;
-        this.parentVNode = vNode.parentVNode = this.context.parent && this.context.parent.vNode;
+        this.parentVNode = vNode.parentVNode = this.context.__parent && this.context.__parent.vNode;
 
         this.update(lastVNode, vNode);
 
@@ -196,7 +200,7 @@ class IntactReact extends Intact {
         if (!this.mountedQueue || this.mountedQueue.done) {
             // get from parent
             let tmp;
-            if ((tmp = this.context) && (tmp = tmp.parent) && (tmp = tmp.mountedQueue)) {
+            if ((tmp = this.context) && (tmp = tmp.__parent) && (tmp = tmp.mountedQueue)) {
                 if (!tmp.done) {
                     this.mountedQueue = tmp;
                     return;
@@ -209,7 +213,7 @@ class IntactReact extends Intact {
 
     __triggerMountedQueue() {
         if (this._shouldTrigger) {
-            FakePromise.all(this.promises).then(() => {
+            FakePromise.all(this.__promises).then(() => {
                 this._triggerMountedQueue();
             });
         }
@@ -222,12 +226,12 @@ IntactReact.prototype.isReactComponent = {};
 // for getting _context in Intact
 IntactReact.contextTypes = {
     _context: noop,
-    parent: noop,
-    promises: noop,
+    __parent: noop,
+    __promises: noop,
 };
 IntactReact.childContextTypes = {
-    parent: noop,
-    promises: noop,
+    __parent: noop,
+    __promises: noop,
 };
 
 // for compatibility of IE <= 10

@@ -240,8 +240,12 @@ function functionalWrapper(Component) {
     }
 
     Ctor.contextTypes = {
-        _context: noop
+        _context: noop,
+        parent: noop,
+        promises: noop
     };
+
+    // Ctor.$$cid = 'IntactFunction';
 
     return Ctor;
 }
@@ -409,13 +413,14 @@ function normalize(vNode, parentRef) {
     // maybe return by functional component
     if (vNode instanceof VNode) {
         // update parentRef
-        if (vNode.tag === Wrapper) {
-            vNode.props.parentRef = parentRef;
-        }
+        // if (vNode.tag === Wrapper) {
+        vNode.props.parentRef = parentRef;
+        // }
         return vNode;
     }
     // normalizde the firsthand intact component to let intact access its children
-    if (vNode.type && vNode.type.$$cid === 'IntactReact') {
+    var tmp = void 0;
+    if ((tmp = vNode.type) && (tmp = tmp.$$cid) && (tmp === 'IntactReact' || tmp === 'IntactFunction')) {
         return h$1(vNode.type, normalizeProps(_extends({}, vNode.props, { parentRef: parentRef }), { _context: vNode._owner && vNode._owner.stateNode }, parentRef, vNode.key), null, null, vNode.key, normalizeRef(vNode.ref));
     }
 
@@ -620,9 +625,13 @@ var IntactReact = function (_Intact) {
         var _this2 = this;
 
         var update = function update() {
-            _this2.__pushGetChildContext(nextVNode);
+            if (_this2._updateCount === 0) {
+                _this2.__pushGetChildContext(nextVNode || _this2.vNode);
+            }
             var element = _Intact.prototype.update.call(_this2, lastVNode, nextVNode, fromPending);
-            _this2.__popGetChildContext();
+            if (_this2._updateCount === 0) {
+                _this2.__popGetChildContext();
+            }
             return element;
         };
 

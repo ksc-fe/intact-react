@@ -9,7 +9,7 @@ export default class FakePromise {
         promises.forEach(p => p.then(then));
 
         if (promises._hasRewrite) {
-            console.error('promises has not been done')
+            console.error('last promises has not been done')
         }
         const push = promises.push;
         promises.push = function(p) {

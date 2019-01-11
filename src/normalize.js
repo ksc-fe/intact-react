@@ -19,17 +19,18 @@ export function normalize(vNode, parentRef) {
     // maybe return by functional component
     if (vNode instanceof VNode) {
         // update parentRef
-        if (vNode.tag === Wrapper) {
-            vNode.props.parentRef = parentRef;
+        if (isFunction(vNode.tag)) {
+            vNode.props._parentRef = parentRef;
         }
         return vNode;
     }
     // normalizde the firsthand intact component to let intact access its children
-    if (vNode.type && vNode.type.$$cid === 'IntactReact') {
+    let tmp;
+    if ((tmp = vNode.type) && (tmp = tmp.$$cid) && (tmp === 'IntactReact' || tmp === 'IntactFunction')) {
         return h(
             vNode.type,
             normalizeProps(
-                {...vNode.props, parentRef}, 
+                {...vNode.props, _parentRef: parentRef}, 
                 {_context: vNode._owner && vNode._owner.stateNode},
                 parentRef,
                 vNode.key
@@ -42,7 +43,7 @@ export function normalize(vNode, parentRef) {
     }
 
     // only wrap the react host element
-    return h(Wrapper, {reactVNode: vNode, parentRef}, null, vNode.props.className);
+    return h(Wrapper, {reactVNode: vNode, _parentRef: parentRef}, null, vNode.props.className);
 }
 
 export function normalizeChildren(vNodes, parentRef = {}) {
