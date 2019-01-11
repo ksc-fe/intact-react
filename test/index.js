@@ -713,53 +713,79 @@ describe('Unit test', function() {
             const C = Intact.functionalWrapper((props) => {
                 return h(D, props);
             });
-            const D = createIntactComponent(`<div>{self.get('children')}</div>`, {
+            const D = createIntactComponent(`<div>test</div>`, {
                 displayName: 'D',
                 _mount() {
-                    debugger;
-                    // expect(this.parentVNode.tag === E).to.be.true;
+                    expect(this.parentVNode.tag === 'div').to.be.true;
+                    expect(this.parentVNode.parentVNode.tag === E).to.be.true;
                 }
             });
             D.displayName = 'D';
+            const E = createIntactComponent(`<div>{self.get('children')}</div>`, {
+                displayName: 'E',
+            });
+            E.displayName = 'E';
+            const instance = renderApp(function() {
+                return (
+                    <ChildrenIntactComponent>
+                        <E>
+                            <C />
+                        </E>
+                    </ChildrenIntactComponent>
+                )
+            });
+        });
+
+        it('should get parentVNode which nest functional component in functional component', () => {
+            const h = Intact.Vdt.miss.h;
+            const C = Intact.functionalWrapper((props) => {
+                return h(D, props);
+            });
+            let firstD = true;
+            const D = createIntactComponent(`<div>{self.get('children')}</div>`, {
+                displayName: 'D',
+                _mount() {
+                    if (firstD) {
+                        expect(this.parentVNode).to.be.undefined
+                        firstD = false;
+                    } else {
+                        expect(this.parentVNode.parentVNode.tag === E).to.be.true;
+                    }
+                }
+            });
+            D.displayName = 'D';
+            let e;
             const E = createIntactComponent(`<div>{self.get('show') ? self.get('children') : null}</div>`, {
                 displayName: 'E',
                 _mount() {
-                    window.e = this;
-                    debugger;
+                    e = this;
+                    expect(this.parentVNode.parentVNode.tag).to.eql(D);
                 }
             });
             E.displayName = 'E';
-            const F = createIntactComponent(`<div>test</div>`, {
+            const F = createIntactComponent(`<div>{self.get('children')}</div>`, {
                 _mount() {
                     // update in updating
                     e.update();
-
-                    debugger;
+                    expect(this.parentVNode.parentVNode.tag).to.eql(D);
+                    expect(this.parentVNode.parentVNode.parentVNode.parentVNode.tag).to.eql(E);
+                    expect(this.parentVNode.parentVNode.parentVNode.parentVNode.parentVNode.parentVNode.tag).to.eql(D);
                 }
             });
             F.displayName = 'F';
             const instance = renderApp(function() {
                 return (
-                    // <div>
-                        // <C className="a">
-                            // <ChildrenIntactComponent>
-                                // <E>
-                                    // <C className="b">
-                                        // <F />
-                                    // </C>
-                                // </E>
-                            // </ChildrenIntactComponent>
-                        // </C>
-                    // </div>
                     <C className="a">
+                        <i>test</i>
                         <E>
                             <C className="b">
-                                <F />
+                                <F><span>test</span></F>
                             </C>
                         </E>
                     </C>
                 )
             });
+            e.set('show', true);
         });
 
         it('should get parentVNode in template & update', () => {

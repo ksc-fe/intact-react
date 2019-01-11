@@ -145,7 +145,7 @@ FakePromise.all = function (promises) {
     });
 
     if (promises._hasRewrite) {
-        console.error('promises has not been done');
+        console.error('last promises has not been done');
     }
     var push = promises.push;
     promises.push = function (p) {
@@ -224,7 +224,7 @@ function functionalWrapper(Component) {
     function Ctor(props, context) {
         if (context) {
             // invoked by React
-            var vNodes = Component(normalizeProps(props, context, {}), true);
+            var vNodes = Component(normalizeProps(props, context, { instance: context.__parent }), true);
             if (isArray$1(vNodes)) {
                 return vNodes.map(function (vNode) {
                     return normalizeIntactVNodeToReactVNode(vNode);
@@ -239,11 +239,10 @@ function functionalWrapper(Component) {
 
     Ctor.contextTypes = {
         _context: noop,
-        parent: noop,
-        promises: noop
+        __parent: noop
     };
 
-    // Ctor.$$cid = 'IntactFunction';
+    Ctor.$$cid = 'IntactFunction';
 
     return Ctor;
 }
@@ -301,11 +300,11 @@ var Wrapper = function () {
 
         var vNode = this._addProps(nextVNode);
 
-        var parentComponent = nextVNode.props.parentRef.instance;
+        var parentComponent = nextVNode.props._parentRef.instance;
         if (parentComponent) {
             if (!parentComponent._reactInternalFiber) {
                 // is a firsthand intact component, get its parent instance
-                parentComponent = parentComponent.get('parentRef').instance;
+                parentComponent = parentComponent.get('_parentRef').instance;
             }
         } else {
             // maybe the property which value is vNodes
@@ -342,7 +341,7 @@ var Wrapper = function () {
             // ReactDOM.render(vNode, this.placeholder, resolve);
             // }
         });
-        parentComponent.promises.push(promise);
+        parentComponent.__promises.push(promise);
     };
 
     // we can change props in intact, so we should sync the changes
@@ -357,7 +356,7 @@ var Wrapper = function () {
         var cloneVNode = void 0;
         var _props = void 0;
         for (var key in props) {
-            if (key === 'reactVNode' || key === 'parentRef') continue;
+            if (key === 'reactVNode' || key === '_parentRef') continue;
             // ignore _evClick _evMouseEnter property which add in some components temporarily
             if (ignorePropRegExp.test(key)) continue;
             if (!cloneVNode) {
@@ -411,19 +410,19 @@ function normalize(vNode, parentRef) {
     // maybe return by functional component
     if (vNode instanceof VNode) {
         // update parentRef
-        // if (vNode.tag === Wrapper) {
-        vNode.props.parentRef = parentRef;
-        // }
+        if (isFunction(vNode.tag)) {
+            vNode.props._parentRef = parentRef;
+        }
         return vNode;
     }
     // normalizde the firsthand intact component to let intact access its children
     var tmp = void 0;
     if ((tmp = vNode.type) && (tmp = tmp.$$cid) && (tmp === 'IntactReact' || tmp === 'IntactFunction')) {
-        return h$1(vNode.type, normalizeProps(_extends({}, vNode.props, { parentRef: parentRef }), { _context: vNode._owner && vNode._owner.stateNode }, parentRef, vNode.key), null, null, vNode.key, normalizeRef(vNode.ref));
+        return h$1(vNode.type, normalizeProps(_extends({}, vNode.props, { _parentRef: parentRef }), { _context: vNode._owner && vNode._owner.stateNode }, parentRef, vNode.key), null, null, vNode.key, normalizeRef(vNode.ref));
     }
 
     // only wrap the react host element
-    return h$1(Wrapper, { reactVNode: vNode, parentRef: parentRef }, null, vNode.props.className);
+    return h$1(Wrapper, { reactVNode: vNode, _parentRef: parentRef }, null, vNode.props.className);
 }
 
 function normalizeChildren(vNodes) {
@@ -545,8 +544,8 @@ var IntactReact = function (_Intact) {
 
             parentRef.instance = _this;
 
-            _this.promises = context.promises || [];
-            _this.mountedQueue = context.parent && context.parent.mountedQueue;
+            _this.__promises = context.__promises || [];
+            _this.mountedQueue = context.__parent && context.__parent.mountedQueue;
 
             // fake the vNode
             _this.vNode = h(_this.constructor, normalizedProps);
@@ -565,8 +564,8 @@ var IntactReact = function (_Intact) {
 
     IntactReact.prototype.getChildContext = function getChildContext() {
         return {
-            parent: this,
-            promises: this.promises
+            __parent: this,
+            __promises: this.__promises
         };
     };
 
@@ -645,14 +644,14 @@ var IntactReact = function (_Intact) {
     };
 
     IntactReact.prototype.__pushGetChildContext = function __pushGetChildContext(nextVNode) {
-        var parentRef = nextVNode && nextVNode.props.parentRef;
+        var parentRef = nextVNode && nextVNode.props._parentRef;
         var parentInstance = parentRef && parentRef.instance;
         if (parentInstance) {
             var self = this;
             this.__getChildContext = parentInstance.getChildContext;
             parentInstance.getChildContext = function () {
                 var context = self.__getChildContext.call(this);
-                return _extends({}, context, { parent: self });
+                return _extends({}, context, { __parent: self });
             };
         }
 
@@ -674,7 +673,7 @@ var IntactReact = function (_Intact) {
         this.inited = true;
 
         // add parentVNode
-        this.parentVNode = this.vNode.parentVNode = this.context.parent && this.context.parent.vNode;
+        this.parentVNode = this.vNode.parentVNode = this.context.__parent && this.context.__parent.vNode;
 
         var dom = this.init(null, this.vNode);
         var parentElement = this._placeholder.parentElement;
@@ -708,7 +707,7 @@ var IntactReact = function (_Intact) {
         var lastVNode = this.vNode;
         vNode.children = this;
         this.vNode = vNode;
-        this.parentVNode = vNode.parentVNode = this.context.parent && this.context.parent.vNode;
+        this.parentVNode = vNode.parentVNode = this.context.__parent && this.context.__parent.vNode;
 
         this.update(lastVNode, vNode);
 
@@ -732,7 +731,7 @@ var IntactReact = function (_Intact) {
         if (!this.mountedQueue || this.mountedQueue.done) {
             // get from parent
             var tmp = void 0;
-            if ((tmp = this.context) && (tmp = tmp.parent) && (tmp = tmp.mountedQueue)) {
+            if ((tmp = this.context) && (tmp = tmp.__parent) && (tmp = tmp.mountedQueue)) {
                 if (!tmp.done) {
                     this.mountedQueue = tmp;
                     return;
@@ -747,7 +746,7 @@ var IntactReact = function (_Intact) {
         var _this4 = this;
 
         if (this._shouldTrigger) {
-            FakePromise.all(this.promises).then(function () {
+            FakePromise.all(this.__promises).then(function () {
                 _this4._triggerMountedQueue();
             });
         }
@@ -773,12 +772,12 @@ IntactReact.prototype.isReactComponent = {};
 // for getting _context in Intact
 IntactReact.contextTypes = {
     _context: noop,
-    parent: noop,
-    promises: noop
+    __parent: noop,
+    __promises: noop
 };
 IntactReact.childContextTypes = {
-    parent: noop,
-    promises: noop
+    __parent: noop,
+    __promises: noop
 };
 
 // for compatibility of IE <= 10
