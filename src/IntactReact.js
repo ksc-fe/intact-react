@@ -135,6 +135,7 @@ class IntactReact extends Intact {
 
         const dom = this.init(null, this.vNode);
         const parentElement = this._placeholder.parentElement;
+        this.parentDom = parentElement;
         parentElement.replaceChild(dom, this._placeholder);
         // persist the placeholder to let parentNode to remove the real dom
         this._placeholder._realElement = dom;

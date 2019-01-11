@@ -17,15 +17,12 @@ export default class Wrapper {
         if (this.parentDom) {
             this.parentDom.appendChild(this.placeholder);
         }
-        this._render(nextVNode);
-
-        return this.placeholder;
+        // if the _render is sync, return the result directly
+        return this._render(nextVNode) || this.placeholder;
     }
 
     update(lastVNode, nextVNode) {
-        this._render(nextVNode);
-
-        return this.placeholder;
+        return this._render(nextVNode) || this.placeholder;
     }
 
     destroy(lastVNode, nextVNode, parentDom) {
@@ -59,6 +56,7 @@ export default class Wrapper {
                 parentVNode = parentVNode.parentVNode;
             }
         }
+        let dom;
         const promise = new FakePromise(resolve => {
             // the parentComponent should always be valid
             // if (parentComponent && parentComponent._reactInternalFiber !== undefined) {
@@ -72,7 +70,7 @@ export default class Wrapper {
                         // the Wrapper node is returned by parent component directly
                         // in this case we must fix the element property of parent component
                         // 3 is textNode
-                        const dom = this && this.nodeType === 3 ? this : ReactDOM.findDOMNode(this);
+                        dom = this && this.nodeType === 3 ? this : ReactDOM.findDOMNode(this);
                         let parentVNode = nextVNode.parentVNode;
                         while (parentVNode && parentVNode.tag && parentVNode.tag.$$cid === 'IntactReact') {
                             parentVNode.children.element = dom;
@@ -86,6 +84,9 @@ export default class Wrapper {
             // }
         });
         parentComponent.__promises.push(promise);
+
+        // if (dom) debugger;
+        return dom;
     }
 
     // we can change props in intact, so we should sync the changes

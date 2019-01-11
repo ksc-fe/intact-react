@@ -398,6 +398,24 @@ describe('Unit test', function() {
             container.firstChild.click();
             expect(container.innerHTML).to.eql('<div><div><div>react</div></div></div>');
         });
+
+        it('update intact component which children is react element', () => {
+            const C = createIntactComponent(`return self.get('children');<i></i>`, {
+                _mount() {
+                    expect(this.element.outerHTML).to.eql('<div>react</div>');
+                }
+            });
+            const D = createIntactComponent(`<div><C v-if={self.get('show')}>{self.get('children')}</C></div>`, {
+                _init() {
+                    this.C = C;
+                }
+            });
+            let d;
+            const instance = renderApp(function() {
+                return <D ref={i => d = i}><div>react</div></D>
+            });
+            d.set('show', true);
+        });
     });
 
     it('validate props in intact instead of react', () => {

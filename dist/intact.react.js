@@ -277,15 +277,12 @@ var Wrapper = function () {
         if (this.parentDom) {
             this.parentDom.appendChild(this.placeholder);
         }
-        this._render(nextVNode);
-
-        return this.placeholder;
+        // if the _render is sync, return the result directly
+        return this._render(nextVNode) || this.placeholder;
     };
 
     Wrapper.prototype.update = function update(lastVNode, nextVNode) {
-        this._render(nextVNode);
-
-        return this.placeholder;
+        return this._render(nextVNode) || this.placeholder;
     };
 
     Wrapper.prototype.destroy = function destroy(lastVNode, nextVNode, parentDom) {
@@ -321,6 +318,7 @@ var Wrapper = function () {
                 parentVNode = parentVNode.parentVNode;
             }
         }
+        var dom = void 0;
         var promise = new FakePromise(function (resolve) {
             // the parentComponent should always be valid
             // if (parentComponent && parentComponent._reactInternalFiber !== undefined) {
@@ -331,7 +329,7 @@ var Wrapper = function () {
                 // the Wrapper node is returned by parent component directly
                 // in this case we must fix the element property of parent component
                 // 3 is textNode
-                var dom = this && this.nodeType === 3 ? this : ReactDOM.findDOMNode(this);
+                dom = this && this.nodeType === 3 ? this : ReactDOM.findDOMNode(this);
                 var parentVNode = nextVNode.parentVNode;
                 while (parentVNode && parentVNode.tag && parentVNode.tag.$$cid === 'IntactReact') {
                     parentVNode.children.element = dom;
@@ -344,6 +342,9 @@ var Wrapper = function () {
             // }
         });
         parentComponent.__promises.push(promise);
+
+        // if (dom) debugger;
+        return dom;
     };
 
     // we can change props in intact, so we should sync the changes
@@ -679,6 +680,7 @@ var IntactReact = function (_Intact) {
 
         var dom = this.init(null, this.vNode);
         var parentElement = this._placeholder.parentElement;
+        this.parentDom = parentElement;
         parentElement.replaceChild(dom, this._placeholder);
         // persist the placeholder to let parentNode to remove the real dom
         this._placeholder._realElement = dom;
