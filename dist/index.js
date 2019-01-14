@@ -420,6 +420,10 @@ function normalize(vNode, parentRef) {
         return h$1(vNode.type, normalizeProps(_extends({}, vNode.props, { _parentRef: parentRef }), { _context: vNode._owner && vNode._owner.stateNode }, parentRef, vNode.key), null, null, vNode.key, normalizeRef(vNode.ref));
     }
 
+    if (vNode.type === React.Fragment) {
+        return normalizeChildren(vNode.props.children, parentRef);
+    }
+
     // only wrap the react host element
     return h$1(Wrapper, { reactVNode: vNode, _parentRef: parentRef }, null, vNode.props.className);
 }

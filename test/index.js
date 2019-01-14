@@ -174,6 +174,17 @@ describe('Unit test', function() {
 
                 expect(container.innerHTML).to.eql('<div><div>test</div></div>');
             });
+
+            it('normalize React.Fragment', () => {
+                const C = createIntactComponent(`<div>{self.get('children')}</div>`, {
+                    _init() {
+                        const children = this.get('children');
+                        expect(children.type).to.eql(1);
+                        expect(children.children).to.eql('react');
+                    }
+                });
+                render(<C><React.Fragment>react</React.Fragment></C>);
+            });
         });
 
         it('render intact functional component', () => {

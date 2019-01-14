@@ -1,4 +1,5 @@
 import Intact from 'intact/dist';
+import React from 'react';
 import Wrapper from './Wrapper';
 import createElement from './createElement';
 
@@ -40,6 +41,10 @@ export function normalize(vNode, parentRef) {
             vNode.key,
             normalizeRef(vNode.ref)
         );
+    }
+
+    if (vNode.type === React.Fragment) {
+        return normalizeChildren(vNode.props.children, parentRef);
     }
 
     // only wrap the react host element
