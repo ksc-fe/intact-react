@@ -417,7 +417,24 @@ describe('Unit test', function() {
             d.set('show', true);
             // destroy
             d.set('show', false);
+            d.update();
             expect(container.innerHTML).to.eql('<div></div>');
+        });
+
+        it('update block', () => {
+            const C = createIntactComponent(`<div><b:test /></div>`);
+            let c;
+            const instance = renderApp(function() {
+                return <C ref={i => c = i} b-test={<React.Fragment><SimpleIntactComponent /></React.Fragment>}></C>
+            });
+            c.update();
+            expect(container.innerHTML).to.eql('<div><div>Intact Component</div></div>');
+            c.update();
+            expect(container.innerHTML).to.eql('<div><div>Intact Component</div></div>');
+            instance.forceUpdate();
+            expect(container.innerHTML).to.eql('<div><div>Intact Component</div></div>');
+            instance.forceUpdate();
+            expect(container.innerHTML).to.eql('<div><div>Intact Component</div></div>');
         });
     });
 

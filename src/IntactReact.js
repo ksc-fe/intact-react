@@ -4,6 +4,7 @@ import Intact from 'intact/dist';
 import {normalizeProps, normalizeChildren} from './normalize'
 import functionalWrapper, {noop, isArray} from './functionalWrapper';
 import FakePromise from './FakePromise'; 
+import {commentNodeValue} from './Wrapper';
 
 const {isObject, extend} = Intact.utils;
 const h = Intact.Vdt.miss.h;
@@ -38,6 +39,21 @@ class IntactReact extends Intact {
         } else {
             super(props);
         }
+
+        let element;
+        Object.defineProperty(this, 'element', {
+            get() {
+                if (element && element.nodeType === 8 && element.nodeValue === commentNodeValue) {
+                    return element._realElement || element;
+                }
+                return element;
+            },
+            set(v) {
+                element = v;
+            },
+            configurable: true,
+            enumerable: true,
+        });
     }
 
     getChildContext() {

@@ -4,13 +4,15 @@ import {noop} from './functionalWrapper';
 
 const ignorePropRegExp = /_ev[A-Z]/;
 
+export const commentNodeValue = ' react-mount-point-unstable ';
+
 // wrap the react element to render it by react self
 export default class Wrapper {
     init(lastVNode, nextVNode) {
         // let the component destroy by itself
         this.destroyed = true; 
         // react can use comment node as parent so long as its text like bellow
-        this.placeholder = document.createComment(' react-mount-point-unstable ');
+        this.placeholder = document.createComment(commentNodeValue);
         // we should append the placholder advanced,
         // because when a intact component update itself
         // the _render will update react element sync
@@ -18,21 +20,12 @@ export default class Wrapper {
             this.parentDom.appendChild(this.placeholder);
         }
         // if the _render is sync, return the result directly
-        const dom = this._render(nextVNode);
-        if (dom) {
-            if (this.parentDom) {
-                this.parentDom.appendChild(this.placeholder);
-            }
-            this.placeholder = dom;
-        }
+        this._render(nextVNode);
         return this.placeholder;
     }
 
     update(lastVNode, nextVNode) {
-        const dom = this._render(nextVNode);
-        if (dom) {
-            this.placeholder = dom;
-        }
+        this._render(nextVNode);
         return this.placeholder;
     }
 
@@ -43,10 +36,14 @@ export default class Wrapper {
             placeholder.parentNode.removeChild(placeholder);
         });
         placeholder._unmount = noop;
+        if (placeholder._realElement) {
+            placeholder._realElement._unmount = noop;
+        }
     }
 
     _render(nextVNode) {
         const vNode = this._addProps(nextVNode);
+        const placeholder = this.placeholder;
 
         let parentComponent = nextVNode.props._parentRef.instance;
         if (parentComponent) {
@@ -67,26 +64,21 @@ export default class Wrapper {
                 parentVNode = parentVNode.parentVNode;
             }
         }
-        let dom;
         const promise = new FakePromise(resolve => {
             // the parentComponent should always be valid
             // if (parentComponent && parentComponent._reactInternalFiber !== undefined) {
                 ReactDOM.unstable_renderSubtreeIntoContainer(
                     parentComponent,
                     vNode,
-                    this.placeholder,
+                    placeholder,
                     // this.parentDom,
                     function() {
                         // if the parentVNode is a Intact component, it indicates that
                         // the Wrapper node is returned by parent component directly
                         // in this case we must fix the element property of parent component
                         // 3 is textNode
-                        dom = this && this.nodeType === 3 ? this : ReactDOM.findDOMNode(this);
-                        let parentVNode = nextVNode.parentVNode;
-                        while (parentVNode && parentVNode.tag && parentVNode.tag.$$cid === 'IntactReact') {
-                            parentVNode.children.element = dom;
-                            parentVNode = parentVNode.parentVNode;
-                        }
+                        const dom = this && this.nodeType === 3 ? this : ReactDOM.findDOMNode(this);
+                        placeholder._realElement = dom;
                         resolve();
                     }
                 );
@@ -95,9 +87,6 @@ export default class Wrapper {
             // }
         });
         parentComponent.__promises.push(promise);
-
-        // if (dom) debugger;
-        return dom;
     }
 
     // we can change props in intact, so we should sync the changes
