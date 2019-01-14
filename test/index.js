@@ -458,6 +458,27 @@ describe('Unit test', function() {
             instance.forceUpdate();
             expect(container.innerHTML).to.eql('<div><div>Intact Component</div></div>');
         });
+
+        it('update in patchProps', () => {
+            const C = createIntactComponent(`<div>{self.get('count')}</div>`, {
+                _init() {
+                    this.on('$change:count', (c, v) => {
+                        if (v === 1) {
+                            this.set('count', 0);
+                        }
+                    });
+                }
+            });
+            const instance = renderApp(function() {
+                return <ChildrenIntactComponent>
+                    <C count={this.state.count} />
+                </ChildrenIntactComponent>
+            }, {count: 0});
+            instance.setState({count: 1});
+            expect(container.innerHTML).to.eql('<div><div>0</div></div>');
+            instance.setState({count: 2});
+            expect(container.innerHTML).to.eql('<div><div>2</div></div>');
+        });
     });
 
     it('validate props in intact instead of react', () => {

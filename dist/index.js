@@ -648,13 +648,16 @@ var IntactReact = function (_Intact) {
         var _this2 = this;
 
         var update = function update() {
-            if (_this2._updateCount === 0) {
+            var __isUpdating = _this2.__isUpdating;
+            _this2.__isUpdating = true;
+            if (!__isUpdating) {
                 _this2.__pushGetChildContext(nextVNode || _this2.vNode);
             }
             var element = _Intact.prototype.update.call(_this2, lastVNode, nextVNode, fromPending);
-            if (_this2._updateCount === 0) {
+            if (!__isUpdating) {
                 _this2.__popGetChildContext();
             }
+            _this2.__isUpdating = __isUpdating;
             return element;
         };
 

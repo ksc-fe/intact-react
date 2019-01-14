@@ -98,13 +98,16 @@ class IntactReact extends Intact {
 
     update(lastVNode, nextVNode, fromPending) {
         const update = () => {
-            if (this._updateCount === 0) {
+            const __isUpdating = this.__isUpdating;
+            this.__isUpdating = true;
+            if (!__isUpdating) {
                 this.__pushGetChildContext(nextVNode || this.vNode);
             }
             const element = super.update(lastVNode, nextVNode, fromPending);
-            if (this._updateCount === 0) {
+            if (!__isUpdating) {
                 this.__popGetChildContext();
             }
+            this.__isUpdating = __isUpdating;
             return element;
         }
 
