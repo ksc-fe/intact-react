@@ -257,6 +257,8 @@ function normalizeIntactVNodeToReactVNode(vNode) {
 
 var ignorePropRegExp = /_ev[A-Z]/;
 
+var commentNodeValue = ' react-mount-point-unstable ';
+
 // wrap the react element to render it by react self
 
 var Wrapper = function () {
@@ -268,7 +270,7 @@ var Wrapper = function () {
         // let the component destroy by itself
         this.destroyed = true;
         // react can use comment node as parent so long as its text like bellow
-        this.placeholder = document.createComment(' react-mount-point-unstable ');
+        this.placeholder = document.createComment(commentNodeValue);
         // we should append the placholder advanced,
         // because when a intact component update itself
         // the _render will update react element sync
@@ -276,21 +278,12 @@ var Wrapper = function () {
             this.parentDom.appendChild(this.placeholder);
         }
         // if the _render is sync, return the result directly
-        var dom = this._render(nextVNode);
-        if (dom) {
-            if (this.parentDom) {
-                this.parentDom.appendChild(this.placeholder);
-            }
-            this.placeholder = dom;
-        }
+        this._render(nextVNode);
         return this.placeholder;
     };
 
     Wrapper.prototype.update = function update(lastVNode, nextVNode) {
-        var dom = this._render(nextVNode);
-        if (dom) {
-            this.placeholder = dom;
-        }
+        this._render(nextVNode);
         return this.placeholder;
     };
 
@@ -301,12 +294,14 @@ var Wrapper = function () {
             placeholder.parentNode.removeChild(placeholder);
         });
         placeholder._unmount = noop;
+        if (placeholder._realElement) {
+            placeholder._realElement._unmount = noop;
+        }
     };
 
     Wrapper.prototype._render = function _render(nextVNode) {
-        var _this = this;
-
         var vNode = this._addProps(nextVNode);
+        var placeholder = this.placeholder;
 
         var parentComponent = nextVNode.props._parentRef.instance;
         if (parentComponent) {
@@ -327,23 +322,18 @@ var Wrapper = function () {
                 parentVNode = parentVNode.parentVNode;
             }
         }
-        var dom = void 0;
         var promise = new FakePromise(function (resolve) {
             // the parentComponent should always be valid
             // if (parentComponent && parentComponent._reactInternalFiber !== undefined) {
-            ReactDOM.unstable_renderSubtreeIntoContainer(parentComponent, vNode, _this.placeholder,
+            ReactDOM.unstable_renderSubtreeIntoContainer(parentComponent, vNode, placeholder,
             // this.parentDom,
             function () {
                 // if the parentVNode is a Intact component, it indicates that
                 // the Wrapper node is returned by parent component directly
                 // in this case we must fix the element property of parent component
                 // 3 is textNode
-                dom = this && this.nodeType === 3 ? this : ReactDOM.findDOMNode(this);
-                var parentVNode = nextVNode.parentVNode;
-                while (parentVNode && parentVNode.tag && parentVNode.tag.$$cid === 'IntactReact') {
-                    parentVNode.children.element = dom;
-                    parentVNode = parentVNode.parentVNode;
-                }
+                var dom = this && this.nodeType === 3 ? this : ReactDOM.findDOMNode(this);
+                placeholder._realElement = dom;
                 resolve();
             });
             // } else {
@@ -351,9 +341,6 @@ var Wrapper = function () {
             // }
         });
         parentComponent.__promises.push(promise);
-
-        // if (dom) debugger;
-        return dom;
     };
 
     // we can change props in intact, so we should sync the changes
@@ -441,9 +428,15 @@ function normalizeChildren(vNodes) {
     var parentRef = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
     if (isArray(vNodes)) {
-        return vNodes.map(function (vNode) {
-            return normalize(vNode, parentRef);
+        var ret = [];
+        vNodes.forEach(function (vNode) {
+            if (isArray(vNode)) {
+                ret.push.apply(ret, normalizeChildren(vNode, parentRef));
+            } else {
+                ret.push(normalize(vNode, parentRef));
+            }
         });
+        return ret;
     }
     return normalize(vNodes, parentRef);
 }
@@ -571,6 +564,22 @@ var IntactReact = function (_Intact) {
         } else {
             var _this = possibleConstructorReturn(this, _Intact.call(this, props));
         }
+
+        var element = void 0;
+        Object.defineProperty(_this, 'element', {
+            get: function get$$1() {
+                if (element && element.nodeType === 8 && element.nodeValue === commentNodeValue) {
+                    return element._realElement || element;
+                }
+                return element;
+            },
+            set: function set$$1(v) {
+                element = v;
+            },
+
+            configurable: true,
+            enumerable: true
+        });
         return possibleConstructorReturn(_this);
     }
 

@@ -119,6 +119,16 @@ describe('Unit test', function() {
             expect(click.callCount).to.eql(1);
         });
 
+        it('render nested array children', () => {
+            render(
+                <ChildrenIntactComponent>
+                    {[1, 2].map(item => <div>{item}</div>)}
+                    <div>3</div>
+                </ChildrenIntactComponent>
+            );
+            expect(container.innerHTML).to.eql('<div><div>1</div><div>2</div><div>3</div></div>');
+        });
+
         describe('Normalize', () => {
             it('normalize events', () => {
                 const C = createIntactComponent(`<div ev-click={self.onClick}>click</div>`, {

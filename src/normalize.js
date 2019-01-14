@@ -48,7 +48,15 @@ export function normalize(vNode, parentRef) {
 
 export function normalizeChildren(vNodes, parentRef = {}) {
     if (isArray(vNodes)) {
-        return vNodes.map(vNode => normalize(vNode, parentRef));
+        const ret = [];
+        vNodes.forEach(vNode => {
+            if (isArray(vNode)) {
+                ret.push(...normalizeChildren(vNode, parentRef));
+            } else {
+                ret.push(normalize(vNode, parentRef));
+            }
+        });
+        return ret;
     }
     return normalize(vNodes, parentRef);
 }
