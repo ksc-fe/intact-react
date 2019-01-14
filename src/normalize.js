@@ -132,6 +132,7 @@ export function normalizeBlock(block) {
 
 export function getEventName(propName) {
     const [first, second, third] = propName;
+    if (!third) return;
     let tmp;
     if (first === 'o' && second === 'n') {
         if (third === '$') {

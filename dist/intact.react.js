@@ -521,6 +521,7 @@ function getEventName(propName) {
         second = propName[1],
         third = propName[2];
 
+    if (!third) return;
     var tmp = void 0;
     if (first === 'o' && second === 'n') {
         if (third === '$') {

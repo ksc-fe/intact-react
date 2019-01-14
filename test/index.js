@@ -131,7 +131,7 @@ describe('Unit test', function() {
 
         describe('Normalize', () => {
             it('normalize events', () => {
-                const C = createIntactComponent(`<div ev-click={self.onClick}>click</div>`, {
+                const C = createIntactComponent(`<div ev-click={self.onClick}>click {self.get('on')}</div>`, {
                     onClick() {
                         this.set('value', 1);
                         this.trigger('click');
@@ -140,9 +140,10 @@ describe('Unit test', function() {
                 
                 const click = sinon.spy(() => console.log('click'));
                 const change = sinon.spy(() => console.log('change'));
-                render(<div><C onClick={click} on$change-value={change}/></div>);
+                render(<div><C onClick={click} on$change-value={change} on="1"/></div>);
 
                 container.firstChild.firstChild.click();
+                expect(container.innerHTML).to.eql('<div><div>click 1</div></div>');
                 expect(click.callCount).to.eql(1);
                 expect(change.callCount).to.eql(1);
             });
