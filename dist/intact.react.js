@@ -278,11 +278,22 @@ var Wrapper = function () {
             this.parentDom.appendChild(this.placeholder);
         }
         // if the _render is sync, return the result directly
-        return this._render(nextVNode) || this.placeholder;
+        var dom = this._render(nextVNode);
+        if (dom) {
+            if (this.parentDom) {
+                this.parentDom.appendChild(this.placeholder);
+            }
+            this.placeholder = dom;
+        }
+        return this.placeholder;
     };
 
     Wrapper.prototype.update = function update(lastVNode, nextVNode) {
-        return this._render(nextVNode) || this.placeholder;
+        var dom = this._render(nextVNode);
+        if (dom) {
+            this.placeholder = dom;
+        }
+        return this.placeholder;
     };
 
     Wrapper.prototype.destroy = function destroy(lastVNode, nextVNode, parentDom) {

@@ -415,6 +415,9 @@ describe('Unit test', function() {
                 return <D ref={i => d = i}><div>react</div></D>
             });
             d.set('show', true);
+            // destroy
+            d.set('show', false);
+            expect(container.innerHTML).to.eql('<div></div>');
         });
     });
 
