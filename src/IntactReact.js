@@ -43,7 +43,7 @@ class IntactReact extends Intact {
         let element;
         Object.defineProperty(this, 'element', {
             get() {
-                if (element && element.nodeType === 8 && element.nodeValue === commentNodeValue) {
+                if (!this.__isUpdating && element && element.nodeType === 8 && element.nodeValue === commentNodeValue) {
                     return element._realElement || element;
                 }
                 return element;
