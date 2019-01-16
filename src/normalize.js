@@ -140,7 +140,7 @@ export function getEventName(propName) {
             return `ev-$${propName.substring(3).replace(/\-/g, ':')}`;
         } else if ((tmp = third.charCodeAt(0)) && tmp >= 65 && tmp <= 90) {
             // e.g. onClick
-            return `ev-${propName.substring(2).toLowerCase()}`;
+            return `ev-${propName.substring(2).toLowerCase().replace(/\-/g, ':')}`;
         }
     }
 }

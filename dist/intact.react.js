@@ -529,7 +529,7 @@ function getEventName(propName) {
             return 'ev-$' + propName.substring(3).replace(/\-/g, ':');
         } else if ((tmp = third.charCodeAt(0)) && tmp >= 65 && tmp <= 90) {
             // e.g. onClick
-            return 'ev-' + propName.substring(2).toLowerCase();
+            return 'ev-' + propName.substring(2).toLowerCase().replace(/\-/g, ':');
         }
     }
 }
@@ -575,7 +575,7 @@ var IntactReact = function (_Intact) {
         var element = void 0;
         Object.defineProperty(_this, 'element', {
             get: function get$$1() {
-                if (element && element.nodeType === 8 && element.nodeValue === commentNodeValue) {
+                if (!this.__isUpdating && element && element.nodeType === 8 && element.nodeValue === commentNodeValue) {
                     return element._realElement || element;
                 }
                 return element;
