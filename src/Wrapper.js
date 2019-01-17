@@ -12,16 +12,16 @@ export default class Wrapper {
         // let the component destroy by itself
         this.destroyed = true; 
         // react can use comment node as parent so long as its text like bellow
-        this.placeholder = document.createComment(commentNodeValue);
+        const placeholder = this.placeholder = document.createComment(commentNodeValue);
         // we should append the placholder advanced,
         // because when a intact component update itself
         // the _render will update react element sync
-        if (this.parentDom) {
-            this.parentDom.appendChild(this.placeholder);
+        const parentDom = this.parentDom || this.parentVNode && this.parentVNode.dom;
+        if (parentDom) {
+            parentDom.appendChild(placeholder);
         }
-        // if the _render is sync, return the result directly
         this._render(nextVNode);
-        return this.placeholder;
+        return placeholder;
     }
 
     update(lastVNode, nextVNode) {
@@ -33,7 +33,13 @@ export default class Wrapper {
         const placeholder = this.placeholder;
         // let react remove it, intact never remove it
         ReactDOM.render(null, placeholder, () => {
-            placeholder.parentNode.removeChild(placeholder);
+            const parentDom = placeholder.parentNode;
+            // get parentNode even if it has been removed
+            // hack for intact replace child
+            Object.defineProperty(placeholder, 'parentNode', {
+                value: parentDom
+            });
+            parentDom.removeChild(placeholder);
         });
         placeholder._unmount = noop;
         if (placeholder._realElement) {

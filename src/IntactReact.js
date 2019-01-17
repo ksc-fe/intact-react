@@ -164,9 +164,7 @@ class IntactReact extends Intact {
         dom[internalInstanceKey] = placeholder[internalInstanceKey];
         dom[internalEventHandlersKey] = placeholder[internalEventHandlersKey];
         Object.defineProperty(placeholder, 'parentNode', {
-            get() {
-                return parentElement;
-            }
+            value: parentElement,
         });
 
         parentElement.replaceChild(dom, placeholder);

@@ -479,6 +479,23 @@ describe('Unit test', function() {
             instance.setState({count: 2});
             expect(container.innerHTML).to.eql('<div><div>2</div></div>');
         });
+
+        it('update react children with wrapper element', () => {
+            const C = createIntactComponent(`
+                <div>{self.get('wrapper') ? 
+                    <div>{self.get('children')}</div> : 
+                    self.get('children')
+                }</div>
+            `, {defaults() { return {wrapper: true}}});
+            let c;
+            const instance = renderApp(function() {
+                return <C ref={i => c = i}><div>test</div></C>
+            });
+            c.set('wrapper', false);
+            expect(container.innerHTML).to.eql('<div><div>test</div></div>');
+            c.set('wrapper', true);
+            expect(container.innerHTML).to.eql('<div><div><div>test</div></div></div>');
+        });
     });
 
     describe('Destroy', () => {
