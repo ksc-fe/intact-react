@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import Intact from 'intact/dist';
 import IntactReact from './IntactReact';
 
 // let React don't validate Intact component's props
@@ -28,4 +29,13 @@ ReactDOM.findDOMNode = function(component) {
     }
 
     return _findDOMNode.call(ReactDOM, component);
+};
+
+const miss = Intact.Vdt.miss;
+const h = miss.h;
+miss.h = function createVNodeForReact(type, ...args) {
+    if (type && type.$$cid === 'IntactFunction') {
+        type = type.$$type;
+    }
+    return h.call(this, type, ...args);
 };

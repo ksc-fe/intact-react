@@ -80,6 +80,8 @@ export function normalizeProps(props, context, parentRef, key) {
         } else if (key.substring(0, 2) === 'b-') {
             // is a block
             _blocks[key.substring(2)] = normalizeBlock(props[key]); 
+        } else if (key === 'forwardRef') {
+            _props.ref = props[key];
         } else {
             _props[key] = props[key];
         }

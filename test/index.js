@@ -208,6 +208,16 @@ describe('Unit test', function() {
             expect(container.innerHTML).to.eql('<div>test<i>test</i></div><div>text</div>test');
         });
 
+        it('render intact functional component with forwardRef', () => {
+            const h = Intact.Vdt.miss.h;
+            const Component = Intact.functionalWrapper(function(props) {
+                return h(ChildrenIntactComponent, props); 
+            });
+            let instance;
+            render(<Component ref={i => instance = i}>test</Component>);
+            expect(instance).be.instanceof(ChildrenIntactComponent);
+        });
+
         it('render block to intact functional component', () => {
             const h = Intact.Vdt.miss.h;
             const Component = Intact.functionalWrapper(function(props) {

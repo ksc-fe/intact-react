@@ -214,6 +214,20 @@ ReactDOM.findDOMNode = function (component) {
     return _findDOMNode.call(ReactDOM, component);
 };
 
+var miss = Intact.Vdt.miss;
+var h$2 = miss.h;
+miss.h = function createVNodeForReact(type) {
+    if (type && type.$$cid === 'IntactFunction') {
+        type = type.$$type;
+    }
+
+    for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+        args[_key - 1] = arguments[_key];
+    }
+
+    return h$2.call.apply(h$2, [this, type].concat(args));
+};
+
 var _Intact$utils$2 = Intact.utils;
 var isStringOrNumber$1 = _Intact$utils$2.isStringOrNumber;
 var isArray$1 = _Intact$utils$2.isArray;
@@ -242,9 +256,15 @@ function functionalWrapper(Component) {
         __parent: noop
     };
 
-    Ctor.$$cid = 'IntactFunction';
+    var ret = React.forwardRef(function (props, ref) {
+        if (ref) props = _extends({}, props, { forwardRef: ref });
+        return createElement(Ctor, props);
+    });
 
-    return Ctor;
+    ret.$$cid = 'IntactFunction';
+    ret.$$type = Ctor;
+
+    return ret;
 }
 
 function normalizeIntactVNodeToReactVNode(vNode) {
@@ -465,6 +485,8 @@ function normalizeProps(props, context, parentRef, key) {
         } else if (_key.substring(0, 2) === 'b-') {
             // is a block
             _blocks[_key.substring(2)] = normalizeBlock(props[_key]);
+        } else if (_key === 'forwardRef') {
+            _props.ref = props[_key];
         } else {
             _props[_key] = props[_key];
         }

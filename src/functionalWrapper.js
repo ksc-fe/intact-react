@@ -1,6 +1,7 @@
 import Intact from 'intact/dist';
 import {normalizeProps} from './normalize';
 import createElement from './createElement';
+import React from 'react';
 
 const {isStringOrNumber, isArray, noop} = Intact.utils;
 export {noop, isArray};
@@ -28,9 +29,15 @@ export default function functionalWrapper(Component) {
         __parent: noop,
     };
 
-    Ctor.$$cid = 'IntactFunction';
+    const ret = React.forwardRef((props, ref) => {
+        if (ref) props = {...props, forwardRef: ref};
+        return createElement(Ctor, props);
+    });
 
-    return Ctor;
+    ret.$$cid = 'IntactFunction';
+    ret.$$type = Ctor;
+
+    return ret;
 }
 
 export function normalizeIntactVNodeToReactVNode(vNode) {
