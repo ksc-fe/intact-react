@@ -541,6 +541,9 @@ var extend = _Intact$utils.extend;
 
 var h = Intact.Vdt.miss.h;
 
+var internalInstanceKey = void 0;
+var internalEventHandlersKey = void 0;
+
 var IntactReact = function (_Intact) {
     inherits(IntactReact, _Intact);
 
@@ -707,11 +710,22 @@ var IntactReact = function (_Intact) {
         this.parentVNode = this.vNode.parentVNode = this.context.__parent && this.context.__parent.vNode;
 
         var dom = this.init(null, this.vNode);
-        var parentElement = this._placeholder.parentElement;
+        var placeholder = this._placeholder;
+        var parentElement = placeholder.parentElement;
         this.parentDom = parentElement;
-        parentElement.replaceChild(dom, this._placeholder);
+
+        // for unmountComponentAtNode
+        dom[internalInstanceKey] = placeholder[internalInstanceKey];
+        dom[internalEventHandlersKey] = placeholder[internalEventHandlersKey];
+        Object.defineProperty(placeholder, 'parentNode', {
+            get: function get$$1() {
+                return parentElement;
+            }
+        });
+
+        parentElement.replaceChild(dom, placeholder);
         // persist the placeholder to let parentNode to remove the real dom
-        this._placeholder._realElement = dom;
+        placeholder._realElement = dom;
         if (!parentElement._hasRewrite) {
             var removeChild = parentElement.removeChild;
             parentElement.removeChild = function (child) {
@@ -748,6 +762,11 @@ var IntactReact = function (_Intact) {
 
     IntactReact.prototype.__ref = function __ref(element) {
         this._placeholder = element;
+        if (!internalInstanceKey) {
+            var keys = Object.keys(element);
+            internalInstanceKey = keys[0];
+            internalEventHandlersKey = keys[1];
+        }
     };
 
     IntactReact.prototype.render = function render() {

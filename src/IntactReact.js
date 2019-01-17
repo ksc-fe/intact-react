@@ -9,6 +9,9 @@ import {commentNodeValue} from './Wrapper';
 const {isObject, extend} = Intact.utils;
 const h = Intact.Vdt.miss.h;
 
+let internalInstanceKey;
+let internalEventHandlersKey;
+
 class IntactReact extends Intact {
     static functionalWrapper = functionalWrapper;
 
@@ -153,11 +156,22 @@ class IntactReact extends Intact {
         this.parentVNode = this.vNode.parentVNode = this.context.__parent && this.context.__parent.vNode;
 
         const dom = this.init(null, this.vNode);
-        const parentElement = this._placeholder.parentElement;
+        const placeholder = this._placeholder;
+        const parentElement = placeholder.parentElement;
         this.parentDom = parentElement;
-        parentElement.replaceChild(dom, this._placeholder);
+
+        // for unmountComponentAtNode
+        dom[internalInstanceKey] = placeholder[internalInstanceKey];
+        dom[internalEventHandlersKey] = placeholder[internalEventHandlersKey];
+        Object.defineProperty(placeholder, 'parentNode', {
+            get() {
+                return parentElement;
+            }
+        });
+
+        parentElement.replaceChild(dom, placeholder);
         // persist the placeholder to let parentNode to remove the real dom
-        this._placeholder._realElement = dom;
+        placeholder._realElement = dom;
         if (!parentElement._hasRewrite) {
             const removeChild = parentElement.removeChild;
             parentElement.removeChild = function(child) {
@@ -201,6 +215,11 @@ class IntactReact extends Intact {
 
     __ref(element) {
         this._placeholder = element;
+        if (!internalInstanceKey) {
+            const keys = Object.keys(element);
+            internalInstanceKey = keys[0];
+            internalEventHandlersKey = keys[1];
+        }
     }
 
     render() {

@@ -481,6 +481,16 @@ describe('Unit test', function() {
         });
     });
 
+    describe('Destroy', () => {
+        it('should unmount intact component which returned by react component directly', () => {
+            const instance = renderApp(function() {
+                return <ChildrenIntactComponent>test</ChildrenIntactComponent>
+            });
+            ReactDOM.unmountComponentAtNode(container);
+            expect(container.innerHTML).to.eql('');
+        });
+    });
+
     it('validate props in intact instead of react', () => {
         const error = console.error;
         console.error = sinon.spy((...args) => {
