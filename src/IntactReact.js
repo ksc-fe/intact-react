@@ -265,6 +265,7 @@ IntactReact.contextTypes = {
     _context: noop,
     __parent: noop,
     __promises: noop,
+    router: noop,
 };
 IntactReact.childContextTypes = {
     __parent: noop,
