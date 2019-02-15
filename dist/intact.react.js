@@ -683,11 +683,13 @@ var IntactReact = function (_Intact) {
         var update = function update() {
             var __isUpdating = _this2.__isUpdating;
             _this2.__isUpdating = true;
-            if (!__isUpdating) {
+            // do not change getChildContext when update parent component
+            // in sub-component on init
+            if (!__isUpdating && !_this2.__getChildContext) {
                 _this2.__pushGetChildContext(nextVNode || _this2.vNode);
             }
             var element = _Intact.prototype.update.call(_this2, lastVNode, nextVNode, fromPending);
-            if (!__isUpdating) {
+            if (!__isUpdating && !_this2.__getChildContext) {
                 _this2.__popGetChildContext();
             }
             _this2.__isUpdating = __isUpdating;
@@ -723,6 +725,7 @@ var IntactReact = function (_Intact) {
     IntactReact.prototype.__popGetChildContext = function __popGetChildContext() {
         if (this.__parentInstance) {
             this.__parentInstance.getChildContext = this.__getChildContext;
+            this.__getChildContext = null;
         }
     };
 

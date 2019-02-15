@@ -103,11 +103,13 @@ class IntactReact extends Intact {
         const update = () => {
             const __isUpdating = this.__isUpdating;
             this.__isUpdating = true;
-            if (!__isUpdating) {
+            // do not change getChildContext when update parent component
+            // in sub-component on init
+            if (!__isUpdating && !this.__getChildContext) {
                 this.__pushGetChildContext(nextVNode || this.vNode);
             }
             const element = super.update(lastVNode, nextVNode, fromPending);
-            if (!__isUpdating) {
+            if (!__isUpdating && !this.__getChildContext) {
                 this.__popGetChildContext();
             }
             this.__isUpdating = __isUpdating;
@@ -143,6 +145,7 @@ class IntactReact extends Intact {
     __popGetChildContext() {
         if (this.__parentInstance) {
             this.__parentInstance.getChildContext = this.__getChildContext;
+            this.__getChildContext = null;
         }
     }
 

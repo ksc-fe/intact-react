@@ -506,6 +506,30 @@ describe('Unit test', function() {
             c.set('wrapper', true);
             expect(container.innerHTML).to.eql('<div><div><div>test</div></div></div>');
         });
+
+        it('update parent component in sub-component on init', () => {
+            let d;
+            const C = createIntactComponent(`<div>test</div>`, {
+                _init() {
+                    d.update();
+                }
+            });
+            const D = createIntactComponent(`<div>{self.get('children')}</div>`, {
+                _init() {
+                    d = this;
+                }
+            });
+            const instance = renderApp(function() {
+                return <ChildrenIntactComponent>
+                    <D>
+                        <ChildrenIntactComponent>
+                            <div>1</div>
+                            <C />
+                        </ChildrenIntactComponent>
+                    </D>
+                </ChildrenIntactComponent>
+            });
+        });
     });
 
     describe('Destroy', () => {
