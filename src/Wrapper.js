@@ -114,10 +114,7 @@ export default class Wrapper {
             }
             const prop = props[key];
             // is event
-            if (key === 'className') {
-                const className = _props.className;
-                _props.className = className ? className + ' ' + prop : prop;
-            } else if (key.substr(0, 3) === 'ev-') {
+            if (key.substr(0, 3) === 'ev-') {
                 _props[eventsMap[key]] = prop;
             } else {
                 _props[key] = prop;

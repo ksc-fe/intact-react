@@ -1002,7 +1002,7 @@ describe('Unit test', function() {
                 _changeProps() {
                     const children = this.get('children');
                     children.props['ev-click'] = this.onClick.bind(this);
-                    children.props.className = 'test';
+                    children.props.className = children.className + ' test';
                 }
             }
             IntactComponent.prototype.onClick = onClick;
