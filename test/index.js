@@ -1002,12 +1002,13 @@ describe('Unit test', function() {
                 _changeProps() {
                     const children = this.get('children');
                     children.props['ev-click'] = this.onClick.bind(this);
+                    children.props.className = 'test';
                 }
             }
             IntactComponent.prototype.onClick = onClick;
 
             const instance = renderApp(function() {
-                return <IntactComponent><div>click</div></IntactComponent>
+                return <IntactComponent><div className="a">click</div></IntactComponent>
             });
 
             container.firstChild.firstChild.click(); 
@@ -1015,6 +1016,7 @@ describe('Unit test', function() {
             instance.forceUpdate();
             container.firstChild.firstChild.click(); 
             expect(onClick.callCount).to.eql(2);
+            expect(container.innerHTML).to.eql('<div><div class="a test">click</div></div>');
         });
 
         it('should get children of intact component', () => {
