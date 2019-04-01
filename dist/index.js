@@ -683,11 +683,12 @@ var IntactReact = function (_Intact) {
             _this2.__isUpdating = true;
             // do not change getChildContext when update parent component
             // in sub-component on init
-            if (!__isUpdating && !_this2.__getChildContext) {
+            var shouldPushAndPop = !__isUpdating && !_this2.__getChildContext;
+            if (shouldPushAndPop) {
                 _this2.__pushGetChildContext(nextVNode || _this2.vNode);
             }
             var element = _Intact.prototype.update.call(_this2, lastVNode, nextVNode, fromPending);
-            if (!__isUpdating && !_this2.__getChildContext) {
+            if (shouldPushAndPop) {
                 _this2.__popGetChildContext();
             }
             _this2.__isUpdating = __isUpdating;
