@@ -759,6 +759,12 @@ var IntactReact = function (_Intact) {
             parentElement.removeChild = function (child) {
                 removeChild.call(this, child._realElement || child);
             };
+            // for insertBefore
+            var insertBefore = parentElement.insertBefore;
+            parentElement.insertBefore = function (child, beforeChild) {
+                insertBefore.call(this, child, beforeChild._realElement || beforeChild);
+            };
+
             parentElement._hasRewrite = true;
         }
 
