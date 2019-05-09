@@ -272,6 +272,64 @@ describe('Unit test', function() {
             expect(instance1.element).to.eql(instance2.element);
         });
 
+        // it('update the component which return react element in rendering', () => {
+            // const _Dropdown = createIntactComponent(`<template>{self.get('children')[0]}</template>`, {
+                // _mount() {
+                    // this.element._dropdown = this;
+                // },
+                // show() {
+                    // this.menu.show();
+                // },
+                // hide() {
+                    // this.menu.hide();
+                // }
+            // });
+            // const DropdownMenu = createIntactComponent(`<div v-if={self.get('show')}>{self.get('children')}</div>`, {
+                // _mount() {
+                    // let trigger = this.element.previousSibling;
+                    // if (trigger.nodeType === 8) {
+                        // trigger = trigger.previousSibling;
+                    // }
+                    // this.dropdown = trigger._dropdown;
+                    // this.dropdown.menu = this;
+                // },
+                // show() {
+                    // this.set('show', true);
+                // },
+                // hide() {
+                    // this.set('show', false);
+                // }
+            // });
+            // const Dropdown = Intact.functionalWrapper(function(props) {
+                // const h = Intact.Vdt.miss.h;
+                // const [element, menu] = props.children;
+                // return [
+                    // h(_Dropdown, {children: [element], ref: props.ref}),
+                    // menu
+                // ];
+            // });
+            // let instance = {};
+            // class D extends React.Component {
+                // render() {
+                    // return <div>
+                        // <Dropdown ref={i => instance.i1 = i}>
+                            // <SimpleIntactComponent />
+                            // <DropdownMenu>
+                                // <Dropdown ref={i => instance.i2 = i}>
+                                    // <div>menu</div>
+                                    // <DropdownMenu>
+                                        // <div>sub menu</div>
+                                    // </DropdownMenu>
+                                // </Dropdown>
+                            // </DropdownMenu>
+                        // </Dropdown>
+                    // </div>
+                // }
+            // }
+            // render(<D />);
+            // window.i = instance;
+        // });
+
         describe('_context', () => {
             let instance;
             let C;

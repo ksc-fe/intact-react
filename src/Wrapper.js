@@ -13,10 +13,24 @@ export default class Wrapper {
         this.destroyed = true; 
         // react can use comment node as parent so long as its text like bellow
         const placeholder = this.placeholder = document.createComment(commentNodeValue);
+
         // we should append the placholder advanced,
         // because when a intact component update itself
         // the _render will update react element sync
-        const parentDom = this.parentDom || this.parentVNode && this.parentVNode.dom;
+        //
+        // maybe the parent component return this element directly
+        // so we must find parent's parent
+        let parentDom = this.parentDom;
+        if (!parentDom) {
+            let parentVNode = this.parentVNode;
+            while (parentVNode) {
+                if (parentVNode.dom) {
+                    parentDom = parentVNode.dom;
+                    break;
+                }
+                parentVNode = parentVNode.parentVNode;
+            }
+        }
         if (parentDom) {
             parentDom.appendChild(placeholder);
         }

@@ -293,10 +293,24 @@ var Wrapper = function () {
         this.destroyed = true;
         // react can use comment node as parent so long as its text like bellow
         var placeholder = this.placeholder = document.createComment(commentNodeValue);
+
         // we should append the placholder advanced,
         // because when a intact component update itself
         // the _render will update react element sync
-        var parentDom = this.parentDom || this.parentVNode && this.parentVNode.dom;
+        //
+        // maybe the parent component return this element directly
+        // so we must find parent's parent
+        var parentDom = this.parentDom;
+        if (!parentDom) {
+            var parentVNode = this.parentVNode;
+            while (parentVNode) {
+                if (parentVNode.dom) {
+                    parentDom = parentVNode.dom;
+                    break;
+                }
+                parentVNode = parentVNode.parentVNode;
+            }
+        }
         if (parentDom) {
             parentDom.appendChild(placeholder);
         }
@@ -670,10 +684,13 @@ var IntactReact = function (_Intact) {
 
     IntactReact.prototype.init = function init(lastVNode, nextVNode) {
         // react has changed the refs, so we reset it back
+        var __isUpdating = this.__isUpdating;
+        this.__isUpdating = true;
         this.refs = this.vdt.widgets || {};
         this.__pushGetChildContext(nextVNode);
         var element = _Intact.prototype.init.call(this, lastVNode, nextVNode);
         this.__popGetChildContext();
+        this.__isUpdating = __isUpdating;
         return element;
     };
 

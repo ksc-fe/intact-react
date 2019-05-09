@@ -92,10 +92,13 @@ class IntactReact extends Intact {
 
     init(lastVNode, nextVNode) {
         // react has changed the refs, so we reset it back
+        const __isUpdating = this.__isUpdating;
+        this.__isUpdating = true;
         this.refs = this.vdt.widgets || {};
         this.__pushGetChildContext(nextVNode);
         const element = super.init(lastVNode, nextVNode);
         this.__popGetChildContext();
+        this.__isUpdating = __isUpdating;
         return element;
     }
 
