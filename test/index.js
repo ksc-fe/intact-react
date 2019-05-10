@@ -455,6 +455,19 @@ describe('Unit test', function() {
             expect(container.innerHTML).to.eql('<div><div>1</div><div>2</div><div>3</div></div>')
         });
 
+        it('insert react element before intact component', () => {
+            const instance = renderApp(function() {
+                return (
+                    <div>
+                        {this.state.show ? <div>show</div> : undefined}
+                        <SimpleIntactComponent />
+                    </div>
+                );
+            }, {show: false});
+            instance.setState({show: true});
+            expect(container.innerHTML).to.eql('<div><div>show</div><div>Intact Component</div></div>');
+        });
+
         it('_update lifecycle of intact should be called after all children has updated when call its update method directly', () => {
             const C = createIntactComponent(`<div><b:test args={[self.get('v')]} /></div>`, {
                 defaults() {
