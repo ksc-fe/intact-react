@@ -11,6 +11,7 @@ const h = Intact.Vdt.miss.h;
 
 let internalInstanceKey;
 let internalEventHandlersKey;
+let promises = [];
 
 class IntactReact extends Intact {
     static functionalWrapper = functionalWrapper;
@@ -27,7 +28,7 @@ class IntactReact extends Intact {
             super(normalizedProps);
             parentRef.instance = this;
 
-            this.__promises = context.__promises || [];
+            this.__promises = context.__promises || promises;
             this.mountedQueue = context.__parent && context.__parent.mountedQueue;
 
             // fake the vNode
@@ -264,6 +265,7 @@ class IntactReact extends Intact {
     __triggerMountedQueue() {
         if (this._shouldTrigger) {
             FakePromise.all(this.__promises).then(() => {
+                promises = [];
                 this._triggerMountedQueue();
             });
         }

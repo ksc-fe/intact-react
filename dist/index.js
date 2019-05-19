@@ -136,30 +136,37 @@ var FakePromise = function () {
 
 FakePromise.all = function (promises) {
     var resolvedCount = 0;
-    var callback = void 0;
+    var callbacks = promises.callbacks || (promises.callbacks = []);
     var resolved = false;
     var done = false;
 
     promises.forEach(function (p) {
-        return p.then(then);
+        if (p._hasRewrite) return;
+        p._hasRewrite = true;
+        p.then(then);
     });
 
-    if (promises._hasRewrite) {
-        console.error('last promises has not been done');
+    if (!promises._hasRewrite) {
+        // console.error('last promises has not been done')
+        var push = promises.push;
+        promises.push = function (p) {
+            p.then(then);
+            push.call(promises, p);
+        };
+        promises.push.push = push;
+        promises._hasRewrite = true;
     }
-    var push = promises.push;
-    promises.push = function (p) {
-        p.then(then);
-        push.call(promises, p);
-    };
-    promises._hasRewrite = true;
 
     function _cb() {
         // clear array
         promises.length = 0;
-        promises.push = push;
+        promises.push = promises.push.push;
         promises._hasRewrite = false;
-        callback();
+        promises.callbacks = [];
+        var cb = void 0;
+        while (cb = callbacks.shift()) {
+            cb();
+        }
     }
 
     function then() {
@@ -169,7 +176,7 @@ FakePromise.all = function (promises) {
             if (done) {
                 return console.error('promise has done');
             }
-            if (callback) {
+            if (callbacks.length) {
                 done = true;
                 _cb();
             }
@@ -178,7 +185,7 @@ FakePromise.all = function (promises) {
 
     return {
         then: function then(cb) {
-            callback = cb;
+            callbacks.push(cb);
             if (!promises.length || resolved) {
                 _cb();
             }
@@ -583,6 +590,7 @@ var h = Intact.Vdt.miss.h;
 
 var internalInstanceKey = void 0;
 var internalEventHandlersKey = void 0;
+var promises = [];
 
 var IntactReact = function (_Intact) {
     inherits(IntactReact, _Intact);
@@ -599,7 +607,7 @@ var IntactReact = function (_Intact) {
 
             parentRef.instance = _this;
 
-            _this.__promises = context.__promises || [];
+            _this.__promises = context.__promises || promises;
             _this.mountedQueue = context.__parent && context.__parent.mountedQueue;
 
             // fake the vNode
@@ -849,6 +857,7 @@ var IntactReact = function (_Intact) {
 
         if (this._shouldTrigger) {
             FakePromise.all(this.__promises).then(function () {
+                promises = [];
                 _this4._triggerMountedQueue();
             });
         }

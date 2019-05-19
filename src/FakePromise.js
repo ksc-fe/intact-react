@@ -2,28 +2,37 @@
 export default class FakePromise {
     static all = function(promises) {
         let resolvedCount = 0;
-        let callback;
+        let callbacks = promises.callbacks || (promises.callbacks = []);
         let resolved = false;
         let done = false;
 
-        promises.forEach(p => p.then(then));
+        promises.forEach(p => {
+            if (p._hasRewrite) return;
+            p._hasRewrite = true;
+            p.then(then)
+        });
 
-        if (promises._hasRewrite) {
-            console.error('last promises has not been done')
+        if (!promises._hasRewrite) {
+            // console.error('last promises has not been done')
+            const push = promises.push;
+            promises.push = function(p) {
+                p.then(then);
+                push.call(promises, p);
+            };
+            promises.push.push = push;
+            promises._hasRewrite = true;
         }
-        const push = promises.push;
-        promises.push = function(p) {
-            p.then(then);
-            push.call(promises, p);
-        };
-        promises._hasRewrite = true;
 
         function _cb() {
             // clear array
             promises.length = 0;
-            promises.push = push;
+            promises.push = promises.push.push;
             promises._hasRewrite = false;
-            callback();
+            promises.callbacks = [];
+            let cb;
+            while (cb = callbacks.shift()) {
+                cb();
+            }
         }
 
         function then() {
@@ -33,7 +42,7 @@ export default class FakePromise {
                 if (done) {
                     return console.error('promise has done');
                 }
-                if (callback) {
+                if (callbacks.length) {
                     done = true;
                     _cb();
                 }
@@ -43,7 +52,7 @@ export default class FakePromise {
 
         return {
             then(cb) {
-                callback = cb;
+                callbacks.push(cb);
                 if (!promises.length || resolved) {
                     _cb();
                 }
