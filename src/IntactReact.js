@@ -44,6 +44,8 @@ class IntactReact extends Intact {
             super(props);
         }
 
+        this._triggerFlagStack = [];
+
         let element;
         Object.defineProperty(this, 'element', {
             get() {
@@ -246,7 +248,7 @@ class IntactReact extends Intact {
 
     // we should promise that all intact components have been mounted
     __initMountedQueue() {
-        this.__oldTriggerFlag = this._shouldTrigger;
+        this._triggerFlagStack.push(this._shouldTrigger);
         this._shouldTrigger = false;
         if (!this.mountedQueue || this.mountedQueue.done) {
             // get from parent
@@ -269,7 +271,7 @@ class IntactReact extends Intact {
                 this._triggerMountedQueue();
             });
         }
-        this._shouldTrigger = this.__oldTriggerFlag;
+        this._shouldTrigger = this._triggerFlagStack.pop(); 
     }
 }
 

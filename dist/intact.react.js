@@ -625,6 +625,8 @@ var IntactReact = function (_Intact) {
             var _this = possibleConstructorReturn(this, _Intact.call(this, props));
         }
 
+        _this._triggerFlagStack = [];
+
         var element = void 0;
         Object.defineProperty(_this, 'element', {
             get: function get$$1() {
@@ -838,7 +840,7 @@ var IntactReact = function (_Intact) {
 
     // we should promise that all intact components have been mounted
     IntactReact.prototype.__initMountedQueue = function __initMountedQueue() {
-        this.__oldTriggerFlag = this._shouldTrigger;
+        this._triggerFlagStack.push(this._shouldTrigger);
         this._shouldTrigger = false;
         if (!this.mountedQueue || this.mountedQueue.done) {
             // get from parent
@@ -863,7 +865,7 @@ var IntactReact = function (_Intact) {
                 _this4._triggerMountedQueue();
             });
         }
-        this._shouldTrigger = this.__oldTriggerFlag;
+        this._shouldTrigger = this._triggerFlagStack.pop();
     };
 
     createClass(IntactReact, [{
