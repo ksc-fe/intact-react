@@ -1179,4 +1179,28 @@ describe('Unit test', function() {
         });
         render(<div><C /></div>);
     });
+
+    it('new context api', () => {
+        const Context = React.createContext();
+        function Parent(props) {
+            return (
+                <Context.Provider value="test">
+                    <ChildrenIntactComponent>
+                        <Child />
+                    </ChildrenIntactComponent>
+                </Context.Provider>
+            );
+        }
+        function Child() {
+            return (
+                <Context.Consumer>
+                    {value => {
+                        debugger;
+                        return <div>{value}</div>
+                    }}
+                </Context.Consumer>
+            );
+        }
+        render(<Parent />);
+    });
 });
