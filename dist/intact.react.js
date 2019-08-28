@@ -371,23 +371,24 @@ var Wrapper = function () {
                 parentVNode = parentVNode.parentVNode;
             }
         }
+        // if there are providers, pass it to subtree
+        var providers = parentComponent.__providers;
+        providers.forEach(function (value, provider) {
+            vNode = React.createElement(provider, { value: value }, vNode);
+        });
         var promise = new FakePromise(function (resolve) {
             // the parentComponent should always be valid
-            // if (parentComponent && parentComponent._reactInternalFiber !== undefined) {
             ReactDOM.unstable_renderSubtreeIntoContainer(parentComponent, vNode, placeholder,
             // this.parentDom,
             function () {
                 // if the parentVNode is a Intact component, it indicates that
                 // the Wrapper node is returned by parent component directly
-                // in this case we must fix the element property of parent component
+                // in this case we must fix the element property of parent component.
                 // 3 is textNode
                 var dom = this && this.nodeType === 3 ? this : ReactDOM.findDOMNode(this);
                 placeholder._realElement = dom;
                 resolve();
             });
-            // } else {
-            // ReactDOM.render(vNode, this.placeholder, resolve);
-            // }
         });
         parentComponent.__promises.push(promise);
     };
@@ -833,6 +834,16 @@ var IntactReact = function (_Intact) {
     };
 
     IntactReact.prototype.render = function render() {
+        // save all context.Provider
+        this.__providers = new Map();
+        var returnFiber = this._reactInternalFiber;
+        while (returnFiber = returnFiber.return) {
+            // is ContextProvider
+            if (returnFiber.tag === 10) {
+                var type = returnFiber.type;
+                this.__providers.set(type, type._context._currentValue);
+            }
+        }
         return React.createElement('i', {
             ref: this.__ref
         });

@@ -1,6 +1,7 @@
 import ReactDOM from 'react-dom';
 import FakePromise from './FakePromise';
 import {noop} from './functionalWrapper';
+import React from 'react';
 
 const ignorePropRegExp = /_ev[A-Z]/;
 
@@ -62,7 +63,7 @@ export default class Wrapper {
     }
 
     _render(nextVNode) {
-        const vNode = this._addProps(nextVNode);
+        let vNode = this._addProps(nextVNode);
         const placeholder = this.placeholder;
 
         let parentComponent = nextVNode.props._parentRef.instance;
@@ -84,27 +85,28 @@ export default class Wrapper {
                 parentVNode = parentVNode.parentVNode;
             }
         }
+        // if there are providers, pass it to subtree
+        const providers = parentComponent.__providers;
+        providers.forEach((value, provider) => {
+            vNode = React.createElement(provider, {value}, vNode);
+        });
         const promise = new FakePromise(resolve => {
             // the parentComponent should always be valid
-            // if (parentComponent && parentComponent._reactInternalFiber !== undefined) {
-                ReactDOM.unstable_renderSubtreeIntoContainer(
-                    parentComponent,
-                    vNode,
-                    placeholder,
-                    // this.parentDom,
-                    function() {
-                        // if the parentVNode is a Intact component, it indicates that
-                        // the Wrapper node is returned by parent component directly
-                        // in this case we must fix the element property of parent component
-                        // 3 is textNode
-                        const dom = this && this.nodeType === 3 ? this : ReactDOM.findDOMNode(this);
-                        placeholder._realElement = dom;
-                        resolve();
-                    }
-                );
-            // } else {
-                // ReactDOM.render(vNode, this.placeholder, resolve);
-            // }
+            ReactDOM.unstable_renderSubtreeIntoContainer(
+                parentComponent,
+                vNode,
+                placeholder,
+                // this.parentDom,
+                function() {
+                    // if the parentVNode is a Intact component, it indicates that
+                    // the Wrapper node is returned by parent component directly
+                    // in this case we must fix the element property of parent component.
+                    // 3 is textNode
+                    const dom = this && this.nodeType === 3 ? this : ReactDOM.findDOMNode(this);
+                    placeholder._realElement = dom;
+                    resolve();
+                }
+            );
         });
         parentComponent.__promises.push(promise);
     }

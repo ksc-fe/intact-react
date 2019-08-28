@@ -1182,25 +1182,60 @@ describe('Unit test', function() {
 
     it('new context api', () => {
         const Context = React.createContext();
+        const Test = createIntactComponent(`<div>{self.get('show') ? self.get('children') : null}</div>`);
+        let test;
         function Parent(props) {
             return (
-                <Context.Provider value="test">
-                    <ChildrenIntactComponent>
-                        <Child />
-                    </ChildrenIntactComponent>
-                </Context.Provider>
+                <div>
+                    <Context.Provider value={props.value}>
+                        <ChildrenIntactComponent>
+                            <Child />
+                            <header>
+                                <Test ref={i => test = i}>
+                                    <Child />
+                                </Test>
+                            </header>
+                            <div>hello</div>
+                        </ChildrenIntactComponent>
+                    </Context.Provider>
+                    <Child />
+                </div>
             );
         }
         function Child() {
             return (
                 <Context.Consumer>
                     {value => {
-                        debugger;
                         return <div>{value}</div>
                     }}
                 </Context.Consumer>
             );
         }
-        render(<Parent />);
+        render(<Parent value="a" />);
+        expect(container.innerHTML).to.eq('<div><div><div>a</div><header><div></div></header><div>hello</div></div><div></div></div>');
+        ReactDOM.render(<Parent value="b" />, container);
+        expect(container.innerHTML).to.eq('<div><div><div>b</div><header><div></div></header><div>hello</div></div><div></div></div>');
+        test.set('show', true);
+        expect(container.innerHTML).to.eq('<div><div><div>b</div><header><div><div>b</div></div></header><div>hello</div></div><div></div></div>');
+    });
+
+    it('nested new context api should keep order', () => {
+        const Context = React.createContext();
+        render(
+            <Context.Provider value="a">
+                <ChildrenIntactComponent>
+                    <Context.Provider value="b">
+                        <Context.Provider value="c">
+                            <ChildrenIntactComponent>
+                                <Context.Consumer>
+                                    {value => <div>{value}</div>}
+                                </Context.Consumer>
+                            </ChildrenIntactComponent>
+                        </Context.Provider>
+                    </Context.Provider>
+                </ChildrenIntactComponent>
+            </Context.Provider>
+        );
+        expect(container.innerHTML).to.eq('<div><div><div>c</div></div></div>');
     });
 });

@@ -237,6 +237,16 @@ class IntactReact extends Intact {
     }
 
     render() {
+        // save all context.Provider
+        this.__providers = new Map();
+        let returnFiber = this._reactInternalFiber;
+        while (returnFiber = returnFiber.return) {
+            // is ContextProvider
+            if (returnFiber.tag === 10) {
+                const type = returnFiber.type;
+                this.__providers.set(type, type._context._currentValue);
+            }
+        }
         return React.createElement('i', {
             ref: this.__ref 
         });
