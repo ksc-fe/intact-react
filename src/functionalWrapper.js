@@ -13,8 +13,8 @@ export default function functionalWrapper(Component) {
             // invoked by React
             const vNodes = Component(normalizeProps(props, context, {instance: context.__parent}), true);
             if (isArray(vNodes)) {
-                return vNodes.map(vNode => {
-                    return normalizeIntactVNodeToReactVNode(vNode);
+                return vNodes.map((vNode, index) => {
+                    return normalizeIntactVNodeToReactVNode(vNode, index);
                 });
             }
             return normalizeIntactVNodeToReactVNode(vNodes);
@@ -40,13 +40,13 @@ export default function functionalWrapper(Component) {
     return ret;
 }
 
-export function normalizeIntactVNodeToReactVNode(vNode) {
+export function normalizeIntactVNodeToReactVNode(vNode, key) {
     if (isStringOrNumber(vNode)) {
         return vNode;
     } else if (vNode) {
         return createElement(
             vNode.tag,
-            vNode.props,
+            {key, ...vNode.props},
             vNode.props.children || vNode.children
         );
     }

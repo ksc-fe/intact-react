@@ -122,7 +122,7 @@ describe('Unit test', function() {
         it('render nested array children', () => {
             render(
                 <ChildrenIntactComponent>
-                    {[1, 2].map(item => <div>{item}</div>)}
+                    {[1, 2].map(item => <div key={item}>{item}</div>)}
                     <div>3</div>
                 </ChildrenIntactComponent>
             );
@@ -206,6 +206,9 @@ describe('Unit test', function() {
             });
             render(<Components>test<i>test</i></Components>);
             expect(container.innerHTML).to.eql('<div>test<i>test</i></div><div>text</div>test');
+
+            render(<div><Components>test1</Components><Components>test2</Components></div>);
+            expect(container.innerHTML).to.eql('<div><div>test1</div><div>text</div>test<div>test2</div><div>text</div>test</div>');
         });
 
         it('render intact functional component with forwardRef', () => {
@@ -425,8 +428,8 @@ describe('Unit test', function() {
             const instance = renderApp(function() {
                 return (
                     <div>
-                        {this.state.list.map(item => {
-                            return <ChildrenIntactComponent>{item}</ChildrenIntactComponent> 
+                        {this.state.list.map((item, index) => {
+                            return <ChildrenIntactComponent key={index}>{item}</ChildrenIntactComponent> 
                         })}
                     </div>
                 );
@@ -442,8 +445,8 @@ describe('Unit test', function() {
             const instance = renderApp(function() {
                 return (
                     <ChildrenIntactComponent>
-                        {this.state.list.map(item => {
-                            return <div>{item}</div>
+                        {this.state.list.map((item, index) => {
+                            return <div key={index}>{item}</div>
                         })}
                     </ChildrenIntactComponent>
                 )
@@ -1237,5 +1240,24 @@ describe('Unit test', function() {
             </Context.Provider>
         );
         expect(container.innerHTML).to.eq('<div><div><div>c</div></div></div>');
+    });
+
+    it('should get element that element nested new context api', () => {
+        const Context = React.createContext();
+        const Component = createIntactComponent(
+            `<template>{self.get('children')}</template>`,
+            {
+                _mount() {
+                    expect(this.element.outerHTML).to.eql('<div>test</div>');
+                },
+            }
+        );
+        render(
+            <Context.Provider>
+                <Component>
+                    <div>test</div>
+                </Component>
+            </Context.Provider>
+        );
     });
 });

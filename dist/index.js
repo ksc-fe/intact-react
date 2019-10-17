@@ -247,8 +247,8 @@ function functionalWrapper(Component) {
             // invoked by React
             var vNodes = Component(normalizeProps(props, context, { instance: context.__parent }), true);
             if (isArray$1(vNodes)) {
-                return vNodes.map(function (vNode) {
-                    return normalizeIntactVNodeToReactVNode(vNode);
+                return vNodes.map(function (vNode, index) {
+                    return normalizeIntactVNodeToReactVNode(vNode, index);
                 });
             }
             return normalizeIntactVNodeToReactVNode(vNodes);
@@ -274,11 +274,11 @@ function functionalWrapper(Component) {
     return ret;
 }
 
-function normalizeIntactVNodeToReactVNode(vNode) {
+function normalizeIntactVNodeToReactVNode(vNode, key) {
     if (isStringOrNumber$1(vNode)) {
         return vNode;
     } else if (vNode) {
-        return createElement(vNode.tag, vNode.props, vNode.props.children || vNode.children);
+        return createElement(vNode.tag, _extends({ key: key }, vNode.props), vNode.props.children || vNode.children);
     }
 }
 
@@ -382,8 +382,15 @@ var Wrapper = function () {
                 // if the parentVNode is a Intact component, it indicates that
                 // the Wrapper node is returned by parent component directly
                 // in this case we must fix the element property of parent component.
-                // 3 is textNode
-                var dom = this && this.nodeType === 3 ? this : ReactDOM.findDOMNode(this);
+                var dom = void 0;
+                if (this) {
+                    dom = this.nodeType === 3 /* TextNode */ ? this : ReactDOM.findDOMNode(this);
+                } else {
+                    // maybe this element is wrapped by Provider
+                    // and we can not get the instance
+                    // but the real element is inserted before the placeholder by React
+                    dom = placeholder.previousSibling;
+                }
                 placeholder._realElement = dom;
                 resolve();
             });

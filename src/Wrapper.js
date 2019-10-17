@@ -101,8 +101,15 @@ export default class Wrapper {
                     // if the parentVNode is a Intact component, it indicates that
                     // the Wrapper node is returned by parent component directly
                     // in this case we must fix the element property of parent component.
-                    // 3 is textNode
-                    const dom = this && this.nodeType === 3 ? this : ReactDOM.findDOMNode(this);
+                    let dom;
+                    if (this) {
+                        dom = this.nodeType === 3 /* TextNode */ ? this : ReactDOM.findDOMNode(this);
+                    } else {
+                        // maybe this element is wrapped by Provider
+                        // and we can not get the instance
+                        // but the real element is inserted before the placeholder by React
+                        dom = placeholder.previousSibling;
+                    }
                     placeholder._realElement = dom;
                     resolve();
                 }
