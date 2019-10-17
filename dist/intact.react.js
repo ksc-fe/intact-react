@@ -340,7 +340,12 @@ var Wrapper = function () {
             Object.defineProperty(placeholder, 'parentNode', {
                 value: parentDom
             });
-            parentDom.removeChild(placeholder);
+            // call original removeChild method to remove the placeholder itself
+            if (parentDom._removeChild) {
+                parentDom._removeChild(placeholder);
+            } else {
+                parentDom.removeChild(placeholder);
+            }
         });
         placeholder._unmount = noop;
         if (placeholder._realElement) {
@@ -793,6 +798,7 @@ var IntactReact = function (_Intact) {
         placeholder._realElement = dom;
         if (!parentElement._hasRewrite) {
             var removeChild = parentElement.removeChild;
+            parentElement._removeChild = removeChild;
             parentElement.removeChild = function (child) {
                 removeChild.call(this, child._realElement || child);
             };

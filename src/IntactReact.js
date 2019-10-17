@@ -182,6 +182,7 @@ class IntactReact extends Intact {
         placeholder._realElement = dom;
         if (!parentElement._hasRewrite) {
             const removeChild = parentElement.removeChild;
+            parentElement._removeChild = removeChild;
             parentElement.removeChild = function(child) {
                 removeChild.call(this, child._realElement || child);
             }

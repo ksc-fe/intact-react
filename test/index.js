@@ -604,6 +604,25 @@ describe('Unit test', function() {
                 </ChildrenIntactComponent>
             });
         });
+
+        it('should remove intact functional component that return element directly', () => {
+            const h = Intact.Vdt.miss.h;
+            const DirectComponent = createIntactComponent(
+                `<template>{self.get('children')}</template>`
+            );
+            const Component = Intact.functionalWrapper(function(props) {
+                return h(DirectComponent, props);
+            });
+
+            render(
+                <div>
+                    <Component>
+                        <span>test</span>
+                    </Component>
+                </div>
+            );
+            ReactDOM.render(null, container);
+        });
     });
 
     describe('Destroy', () => {

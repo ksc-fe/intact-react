@@ -54,7 +54,12 @@ export default class Wrapper {
             Object.defineProperty(placeholder, 'parentNode', {
                 value: parentDom
             });
-            parentDom.removeChild(placeholder);
+            // call original removeChild method to remove the placeholder itself
+            if (parentDom._removeChild) {
+                parentDom._removeChild(placeholder);
+            } else {
+                parentDom.removeChild(placeholder);
+            }
         });
         placeholder._unmount = noop;
         if (placeholder._realElement) {
