@@ -443,10 +443,10 @@ var eventsMap = {
     'ev-mouseleave': 'onMouseLeave'
 };
 
-var _Intact$Vdt$miss = Intact.Vdt.miss;
-var h$1 = _Intact$Vdt$miss.h;
-var VNode = _Intact$Vdt$miss.VNode;
-var Types = _Intact$Vdt$miss.Types;
+var _Intact$Vdt$miss$1 = Intact.Vdt.miss;
+var h$1 = _Intact$Vdt$miss$1.h;
+var VNode = _Intact$Vdt$miss$1.VNode;
+var Types = _Intact$Vdt$miss$1.Types;
 var _Intact$utils$1 = Intact.utils;
 var isFunction = _Intact$utils$1.isFunction;
 var isArray = _Intact$utils$1.isArray;
@@ -598,8 +598,15 @@ function getEventName(propName) {
 var _Intact$utils = Intact.utils;
 var isObject = _Intact$utils.isObject;
 var extend = _Intact$utils.extend;
+var _Intact$Vdt$miss = Intact.Vdt.miss;
+var h = _Intact$Vdt$miss.h;
+var config = _Intact$Vdt$miss.config;
 
-var h = Intact.Vdt.miss.h;
+// disable delegate events
+
+if (config) {
+    config.disableDelegate = true;
+}
 
 var internalInstanceKey = void 0;
 var internalEventHandlersKey = void 0;

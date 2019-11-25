@@ -7,7 +7,12 @@ import FakePromise from './FakePromise';
 import {commentNodeValue} from './Wrapper';
 
 const {isObject, extend} = Intact.utils;
-const h = Intact.Vdt.miss.h;
+const {h, config} = Intact.Vdt.miss;
+
+// disable delegate events
+if (config) {
+    config.disableDelegate = true;
+}
 
 let internalInstanceKey;
 let internalEventHandlersKey;
