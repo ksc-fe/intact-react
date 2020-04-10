@@ -34,6 +34,7 @@ export default class Wrapper {
         }
         if (parentDom) {
             parentDom.appendChild(placeholder);
+            rewriteParentElementApi(parentDom);
         }
         this._render(nextVNode);
         return placeholder;
@@ -158,3 +159,20 @@ const eventsMap = {
     'ev-mouseenter': 'onMouseEnter',
     'ev-mouseleave': 'onMouseLeave',
 };
+
+export function rewriteParentElementApi(parentElement) {
+    if (!parentElement._hasRewrite) {
+        const removeChild = parentElement.removeChild;
+        parentElement._removeChild = removeChild;
+        parentElement.removeChild = function(child) {
+            removeChild.call(this, child._realElement || child);
+        }
+        // for insertBefore
+        const insertBefore = parentElement.insertBefore;
+        parentElement.insertBefore = function(child, beforeChild) {
+            insertBefore.call(this, child, beforeChild._realElement || beforeChild);
+        }
+
+        parentElement._hasRewrite = true;
+    }
+}

@@ -320,6 +320,7 @@ var Wrapper = function () {
         }
         if (parentDom) {
             parentDom.appendChild(placeholder);
+            rewriteParentElementApi(parentDom);
         }
         this._render(nextVNode);
         return placeholder;
@@ -444,6 +445,23 @@ var eventsMap = {
     'ev-mouseenter': 'onMouseEnter',
     'ev-mouseleave': 'onMouseLeave'
 };
+
+function rewriteParentElementApi(parentElement) {
+    if (!parentElement._hasRewrite) {
+        var removeChild = parentElement.removeChild;
+        parentElement._removeChild = removeChild;
+        parentElement.removeChild = function (child) {
+            removeChild.call(this, child._realElement || child);
+        };
+        // for insertBefore
+        var insertBefore = parentElement.insertBefore;
+        parentElement.insertBefore = function (child, beforeChild) {
+            insertBefore.call(this, child, beforeChild._realElement || beforeChild);
+        };
+
+        parentElement._hasRewrite = true;
+    }
+}
 
 var _Intact$Vdt$miss$1 = Intact.Vdt.miss;
 var h$1 = _Intact$Vdt$miss$1.h;
@@ -803,20 +821,7 @@ var IntactReact = function (_Intact) {
         parentElement.replaceChild(dom, placeholder);
         // persist the placeholder to let parentNode to remove the real dom
         placeholder._realElement = dom;
-        if (!parentElement._hasRewrite) {
-            var removeChild = parentElement.removeChild;
-            parentElement._removeChild = removeChild;
-            parentElement.removeChild = function (child) {
-                removeChild.call(this, child._realElement || child);
-            };
-            // for insertBefore
-            var insertBefore = parentElement.insertBefore;
-            parentElement.insertBefore = function (child, beforeChild) {
-                insertBefore.call(this, child, beforeChild._realElement || beforeChild);
-            };
-
-            parentElement._hasRewrite = true;
-        }
+        rewriteParentElementApi(parentElement);
 
         // add mount lifecycle method to queue
         this.mountedQueue.push(function () {

@@ -5,6 +5,7 @@ import {normalizeProps, normalizeChildren} from './normalize'
 import functionalWrapper, {noop, isArray} from './functionalWrapper';
 import FakePromise from './FakePromise'; 
 import {commentNodeValue} from './Wrapper';
+import {rewriteParentElementApi} from './Wrapper';
 
 const {isObject, extend} = Intact.utils;
 const {h, config} = Intact.Vdt.miss;
@@ -185,20 +186,7 @@ class IntactReact extends Intact {
         parentElement.replaceChild(dom, placeholder);
         // persist the placeholder to let parentNode to remove the real dom
         placeholder._realElement = dom;
-        if (!parentElement._hasRewrite) {
-            const removeChild = parentElement.removeChild;
-            parentElement._removeChild = removeChild;
-            parentElement.removeChild = function(child) {
-                removeChild.call(this, child._realElement || child);
-            }
-            // for insertBefore
-            const insertBefore = parentElement.insertBefore;
-            parentElement.insertBefore = function(child, beforeChild) {
-                insertBefore.call(this, child, beforeChild._realElement || beforeChild);
-            }
-
-            parentElement._hasRewrite = true;
-        }
+        rewriteParentElementApi(parentElement);
 
         // add mount lifecycle method to queue
         this.mountedQueue.push(() => {
