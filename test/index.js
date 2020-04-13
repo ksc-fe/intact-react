@@ -409,6 +409,8 @@ describe('Unit test', function() {
             }, {a: 1});
             instance.setState({a: 2});
             expect(container.innerHTML).to.eql('<div>b</div>');
+            instance.setState({a: 1});
+            expect(container.innerHTML).to.eql('<div><div>a</div></div>');
         });
 
         it('update react element in intact component', () => {

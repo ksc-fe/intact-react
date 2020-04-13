@@ -335,19 +335,16 @@ var Wrapper = function () {
         var placeholder = this.placeholder;
         // let react remove it, intact never remove it
         ReactDOM.render(null, placeholder, function () {
-            var parentDom = placeholder.parentNode;
+            var _parentDom = placeholder.parentNode;
             // get parentNode even if it has been removed
             // hack for intact replace child
             Object.defineProperty(placeholder, 'parentNode', {
-                value: parentDom
+                value: _parentDom
             });
-            // call original removeChild method to remove the placeholder itself
-            if (parentDom._removeChild) {
-                parentDom._removeChild(placeholder);
-            } else {
-                parentDom.removeChild(placeholder);
-            }
+            _parentDom.removeChild(placeholder);
         });
+
+        // set _unmount to let Intact never call replaceChild in replaceElement function
         placeholder._unmount = noop;
         if (placeholder._realElement) {
             placeholder._realElement._unmount = noop;
@@ -400,6 +397,7 @@ var Wrapper = function () {
                     dom = placeholder.previousSibling;
                 }
                 placeholder._realElement = dom;
+                dom._placeholder = placeholder;
                 resolve();
             });
         });
@@ -449,17 +447,34 @@ var eventsMap = {
 function rewriteParentElementApi(parentElement) {
     if (!parentElement._hasRewrite) {
         var removeChild = parentElement.removeChild;
-        parentElement._removeChild = removeChild;
         parentElement.removeChild = function (child) {
             removeChild.call(this, child._realElement || child);
-        };
-        // for insertBefore
-        var insertBefore = parentElement.insertBefore;
-        parentElement.insertBefore = function (child, beforeChild) {
-            insertBefore.call(this, child, beforeChild._realElement || beforeChild);
+            clearDom(child);
         };
 
+        var insertBefore = parentElement.insertBefore;
+        parentElement.insertBefore = function (child, beforeChild) {
+            insertBefore.call(this, child, beforeChild && beforeChild._realElement || beforeChild);
+        };
+
+        // const replaceChild = parentElement.replaceChild;
+        // parentElement.replaceChild = function(newChild, oldChild) {
+        // replaceChild.call(this, newChild, oldChild && oldChild._realElement || oldChild); 
+        // clearDom(oldChild);
+        // }
+
         parentElement._hasRewrite = true;
+    }
+}
+
+function clearDom(dom) {
+    var tmp = void 0;
+    if (tmp = dom._realElement) {
+        delete dom._realElement;
+        delete tmp._placeholder;
+    } else if (tmp = dom._placeholder) {
+        delete dom._placeholder;
+        delete tmp._realElement;
     }
 }
 
