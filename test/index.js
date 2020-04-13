@@ -471,6 +471,22 @@ describe('Unit test', function() {
             expect(container.innerHTML).to.eql('<div><div>show</div><div>Intact Component</div></div>');
         });
 
+        it('insert node before react element in intact component', () => {
+            const Button = createIntactComponent(`
+                const loading = self.get('loading');
+                <div>
+                    <div v-if={loading} key="loading">Loading...</div>
+                    {self.get('children')}
+                </div>
+            `);
+            const instance = renderApp(function() {
+                return <Button loading={this.state.loading}><span>test</span></Button>;
+            }, {loading: false});
+
+            instance.setState({loading: true});
+            expect(container.innerHTML).to.eql('<div><div>Loading...</div><span>test</span></div>');
+        });
+
         it('_update lifecycle of intact should be called after all children has updated when call its update method directly', () => {
             const C = createIntactComponent(`<div><b:test args={[self.get('v')]} /></div>`, {
                 defaults() {
