@@ -1,6 +1,6 @@
 {
   "name": "intact-react",
-  "version": "1.1.25",
+  "version": "1.1.26",
   "description": "A compatibility layer for running intact component in react v16",
   "main": "dist/index.js",
   "scripts": {
