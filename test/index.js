@@ -489,6 +489,23 @@ describe('Unit test', function() {
             expect(container.innerHTML).to.eql('<div><div>Loading...</div><span>test</span></div>');
         });
 
+        it('insert keyed react element before non-keyed element in Intact component', () => {
+            const Component = createIntactComponent(`
+                <div>{self.get('children')}<C ref="c" /></div>
+            `, {_init() {
+                this.C = SimpleIntactComponent;
+            }});
+            const instance = renderApp(function() {
+                return <Component ref="c">
+                    {this.state.show ? <div key="test">test</div> : undefined}
+                </Component>
+            }, {show: false});
+
+            instance.refs.c.refs.c.test = true;
+            instance.setState({show: true});
+            expect(instance.refs.c.refs.c.test).to.be.true;
+        });
+
         it('_update lifecycle of intact should be called after all children has updated when call its update method directly', () => {
             const C = createIntactComponent(`<div><b:test args={[self.get('v')]} /></div>`, {
                 defaults() {
