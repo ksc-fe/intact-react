@@ -11,7 +11,7 @@ export const commentNodeValue = ' react-mount-point-unstable ';
 export default class Wrapper {
     init(lastVNode, nextVNode) {
         // let the component destroy by itself
-        this.destroyed = true; 
+        this.destroyed = true;
         // react can use comment node as parent so long as its text like bellow
         const placeholder = this.placeholder = document.createComment(commentNodeValue);
 
@@ -47,15 +47,16 @@ export default class Wrapper {
 
     destroy(lastVNode, nextVNode, parentDom) {
         const placeholder = this.placeholder;
+        const _parentDom = placeholder.parentNode;
+        // get parentNode even if it has been removed
+        // hack for intact replace child
+        Object.defineProperty(placeholder, 'parentNode', {
+            value: _parentDom
+        });
+
         // let react remove it, intact never remove it
         ReactDOM.render(null, placeholder, () => {
-            const _parentDom = placeholder.parentNode;
-            // get parentNode even if it has been removed
-            // hack for intact replace child
-            Object.defineProperty(placeholder, 'parentNode', {
-                value: _parentDom
-            });
-                _parentDom.removeChild(placeholder);
+            _parentDom.removeChild(placeholder);
         });
 
         // set _unmount to let Intact never call replaceChild in replaceElement function
@@ -162,7 +163,10 @@ export function rewriteParentElementApi(parentElement) {
     if (!parentElement._hasRewrite) {
         const removeChild = parentElement.removeChild;
         parentElement.removeChild = function(child) {
-            removeChild.call(this, child._realElement || child);
+            child = child._realElement || child;
+            if (child.__intactIsRemoved) return;
+            removeChild.call(this, child);
+            child.__intactIsRemoved = true;
             clearDom(child);
         }
 
@@ -173,7 +177,7 @@ export function rewriteParentElementApi(parentElement) {
 
         // const replaceChild = parentElement.replaceChild;
         // parentElement.replaceChild = function(newChild, oldChild) {
-            // replaceChild.call(this, newChild, oldChild && oldChild._realElement || oldChild); 
+            // replaceChild.call(this, newChild, oldChild && oldChild._realElement || oldChild);
             // clearDom(oldChild);
         // }
 
@@ -188,6 +192,6 @@ function clearDom(dom) {
         delete tmp._placeholder;
     } else if (tmp = dom._placeholder) {
         delete dom._placeholder;
-        delete tmp._realElement; 
+        delete tmp._realElement;
     }
 }

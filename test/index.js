@@ -52,7 +52,7 @@ describe('Unit test', function() {
         return instance;
     }
 
-    
+
     function expect(input) {
         if (typeof input === 'string') {
             input = input.replace(/<!--.*?-->/g, '');
@@ -137,7 +137,7 @@ describe('Unit test', function() {
                         this.trigger('click');
                     }
                 });
-                
+
                 const click = sinon.spy(() => console.log('click'));
                 const change = sinon.spy(() => console.log('change'));
                 render(<div><C onClick={click} on$change-value={change} on="1"/></div>);
@@ -191,7 +191,7 @@ describe('Unit test', function() {
         it('render intact functional component', () => {
             const h = Intact.Vdt.miss.h;
             const Component = Intact.functionalWrapper(function(props) {
-                return h(ChildrenIntactComponent, props); 
+                return h(ChildrenIntactComponent, props);
             });
             render(<Component>test</Component>);
             expect(container.innerHTML).to.eql('<div>test</div>');
@@ -214,7 +214,7 @@ describe('Unit test', function() {
         it('render intact functional component with forwardRef', () => {
             const h = Intact.Vdt.miss.h;
             const Component = Intact.functionalWrapper(function(props) {
-                return h(ChildrenIntactComponent, props); 
+                return h(ChildrenIntactComponent, props);
             });
             let instance;
             render(<Component ref={i => instance = i}>test</Component>);
@@ -249,7 +249,7 @@ describe('Unit test', function() {
         it('render intact functional component which has wrapped in intact component', () => {
             const h = Intact.Vdt.miss.h;
             const Component = Intact.functionalWrapper(function(props) {
-                return h(ChildrenIntactComponent, props); 
+                return h(ChildrenIntactComponent, props);
             });
             const C = createIntactComponent(`<Component>test</Component>`, {
                 _init() {
@@ -275,7 +275,7 @@ describe('Unit test', function() {
             expect(instance1.element).to.eql(instance2.element);
         });
 
-        it('update the component which return react element in rendering', () => {
+        describe('Functional Component', () => {
             const _Dropdown = createIntactComponent(`<template>{self.get('children')[0]}</template>`, {
                 _mount() {
                     this.element._dropdown = this;
@@ -308,29 +308,69 @@ describe('Unit test', function() {
                 const [element, menu] = props.children;
                 return [
                     h(_Dropdown, {children: [element], ref: props.ref}),
-                    menu
+                    // menu
                 ];
             });
-            let instance = {};
-            class D extends React.Component {
-                render() {
-                    return <div>
-                        <Dropdown ref={i => instance.i1 = i}>
-                            <div>test</div>
-                            <DropdownMenu>
-                                <Dropdown ref={i => instance.i2 = i}>
-                                    <div>menu</div>
-                                    <DropdownMenu>
-                                        <div>sub menu</div>
-                                    </DropdownMenu>
-                                </Dropdown>
-                            </DropdownMenu>
-                        </Dropdown>
-                    </div>
+
+            it('update the component which return react element in rendering', () => {
+                let instance = {};
+                class D extends React.Component {
+                    render() {
+                        return <div>
+                            <Dropdown ref={i => instance.i1 = i}>
+                                <div>test</div>
+                                <DropdownMenu>
+                                    <Dropdown ref={i => instance.i2 = i}>
+                                        <div>menu</div>
+                                        <DropdownMenu>
+                                            <div>sub menu</div>
+                                        </DropdownMenu>
+                                    </Dropdown>
+                                </DropdownMenu>
+                            </Dropdown>
+                        </div>
+                    }
                 }
-            }
-            render(<D />);
-            window.i = instance;
+                render(<D />);
+                // window.i = instance;
+                instance.i1.show();
+                expect(container.innerHTML).to.eq('<div><div>test</div><div><div>menu</div></div></div>');
+                instance.i2.show();
+                expect(container.innerHTML).to.eq('<div><div>test</div><div><div>menu</div><div><div>sub menu</div></div></div></div>');
+                instance.i1.hide();
+                expect(container.innerHTML).to.eq('<div><div>test</div></div>');
+            });
+
+            it('replace functional component with react element', () => {
+                class D extends React.Component {
+                    state = {
+                        show: true,
+                    }
+
+                    render() {
+                        return <div>
+                            {this.state.show ?
+                                <Dropdown>
+                                    <div>a</div>
+                                    <DropdownMenu>
+                                        test
+                                    </DropdownMenu>
+                                </Dropdown> :
+                                <div>b</div>
+                            }
+                        </div>
+                    }
+                }
+
+                let ref;
+                render(<D ref={i => ref = i}/>);
+
+                ref.setState({show: false});
+                // expect(container.innerHTML).to.eql('<div><div>b</div></div>');
+
+                // ref.setState({show: true});
+                // expect(container.innerHTML).to.eql('<div><div>a</div></div>');
+            });
         });
 
         describe('_context', () => {
@@ -431,7 +471,7 @@ describe('Unit test', function() {
                 return (
                     <div>
                         {this.state.list.map((item, index) => {
-                            return <ChildrenIntactComponent key={index}>{item}</ChildrenIntactComponent> 
+                            return <ChildrenIntactComponent key={index}>{item}</ChildrenIntactComponent>
                         })}
                     </div>
                 );
@@ -513,7 +553,7 @@ describe('Unit test', function() {
                 },
                 _update() {
                     expect(this.element.innerHTML).to.eql('<i>2</i>');
-                } 
+                }
             });
             const instance = renderApp(function() {
                 return (
@@ -601,8 +641,8 @@ describe('Unit test', function() {
 
         it('update react children with wrapper element', () => {
             const C = createIntactComponent(`
-                <div>{self.get('wrapper') ? 
-                    <div>{self.get('children')}</div> : 
+                <div>{self.get('wrapper') ?
+                    <div>{self.get('children')}</div> :
                     self.get('children')
                 }</div>
             `, {defaults() { return {wrapper: true}}});
@@ -778,7 +818,7 @@ describe('Unit test', function() {
             expect(getSnapshotBeforeUpdate.callCount).to.eql(1);
             expect(componentDidUpdate.callCount).to.eql(1);
 
-            // destroy 
+            // destroy
             instance.setState({a: 3});
             expect(componentWillUnmount.callCount).to.eql(1);
         });
@@ -827,7 +867,7 @@ describe('Unit test', function() {
                 const instance = renderApp(function() {
                     return (
                         <div>
-                            <A>{childrenA}</A> 
+                            <A>{childrenA}</A>
                             <B>{childrenB}</B>
                         </div>
                     )
@@ -1163,10 +1203,10 @@ describe('Unit test', function() {
                 return <IntactComponent><div className="a">click</div></IntactComponent>
             });
 
-            container.firstChild.firstChild.click(); 
+            container.firstChild.firstChild.click();
             expect(onClick.callCount).to.eql(1);
             instance.forceUpdate();
-            container.firstChild.firstChild.click(); 
+            container.firstChild.firstChild.click();
             expect(onClick.callCount).to.eql(2);
             expect(container.innerHTML).to.eql('<div><div class="a test">click</div></div>');
         });
@@ -1205,7 +1245,7 @@ describe('Unit test', function() {
         render(<div>
             <ChildrenIntactComponent ref={i => refs.a = i}>
                 <div>test</div>
-            </ChildrenIntactComponent> 
+            </ChildrenIntactComponent>
             <SimpleReactComponent ref={i => refs.b = i}>
                 <ChildrenIntactComponent ref={i => refs.c = i}>test</ChildrenIntactComponent>
             </SimpleReactComponent>

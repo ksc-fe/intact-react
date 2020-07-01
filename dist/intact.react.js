@@ -333,14 +333,15 @@ var Wrapper = function () {
 
     Wrapper.prototype.destroy = function destroy(lastVNode, nextVNode, parentDom) {
         var placeholder = this.placeholder;
+        var _parentDom = placeholder.parentNode;
+        // get parentNode even if it has been removed
+        // hack for intact replace child
+        Object.defineProperty(placeholder, 'parentNode', {
+            value: _parentDom
+        });
+
         // let react remove it, intact never remove it
         ReactDOM.render(null, placeholder, function () {
-            var _parentDom = placeholder.parentNode;
-            // get parentNode even if it has been removed
-            // hack for intact replace child
-            Object.defineProperty(placeholder, 'parentNode', {
-                value: _parentDom
-            });
             _parentDom.removeChild(placeholder);
         });
 
@@ -448,7 +449,10 @@ function rewriteParentElementApi(parentElement) {
     if (!parentElement._hasRewrite) {
         var removeChild = parentElement.removeChild;
         parentElement.removeChild = function (child) {
-            removeChild.call(this, child._realElement || child);
+            child = child._realElement || child;
+            if (child.__intactIsRemoved) return;
+            removeChild.call(this, child);
+            child.__intactIsRemoved = true;
             clearDom(child);
         };
 
@@ -459,7 +463,7 @@ function rewriteParentElementApi(parentElement) {
 
         // const replaceChild = parentElement.replaceChild;
         // parentElement.replaceChild = function(newChild, oldChild) {
-        // replaceChild.call(this, newChild, oldChild && oldChild._realElement || oldChild); 
+        // replaceChild.call(this, newChild, oldChild && oldChild._realElement || oldChild);
         // clearDom(oldChild);
         // }
 
