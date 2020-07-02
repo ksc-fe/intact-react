@@ -308,7 +308,7 @@ describe('Unit test', function() {
                 const [element, menu] = props.children;
                 return [
                     h(_Dropdown, {children: [element], ref: props.ref}),
-                    // menu
+                    menu
                 ];
             });
 
