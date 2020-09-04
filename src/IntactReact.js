@@ -3,7 +3,7 @@ import React from 'react';
 import Intact from 'intact/dist';
 import {normalizeProps, normalizeChildren} from './normalize'
 import functionalWrapper, {noop, isArray} from './functionalWrapper';
-import FakePromise from './FakePromise'; 
+import FakePromise from './FakePromise';
 import {commentNodeValue} from './Wrapper';
 import {rewriteParentElementApi} from './Wrapper';
 
@@ -27,7 +27,7 @@ class IntactReact extends Intact {
     static $$cid = 'IntactReact';
 
     constructor(props, context) {
-        // React will pass context to constructor 
+        // React will pass context to constructor
         if (context) {
             const parentRef = {};
             const normalizedProps = normalizeProps(props, context, parentRef);
@@ -41,9 +41,9 @@ class IntactReact extends Intact {
             this.vNode = h(this.constructor, normalizedProps);
             this.vNode.children = this;
 
-            // We must keep the props to be undefined, 
+            // We must keep the props to be undefined,
             // otherwise React will think it has mutated
-            this._props = this.props; 
+            this._props = this.props;
             delete this.props;
             this._isReact = true;
         } else {
@@ -66,6 +66,14 @@ class IntactReact extends Intact {
             configurable: true,
             enumerable: true,
         });
+
+        // sometimes the dom may be destroyed
+        // we should not call _update in this case
+        const _update = this._update;
+        this._update = (lastVNode, nextVNode) => {
+            if (this.destroyed) return;
+            _update.call(this, lastVNode, nextVNode);
+        };
     }
 
     getChildContext() {
@@ -204,10 +212,10 @@ class IntactReact extends Intact {
         this.__initMountedQueue();
 
         const vNode = h(
-            this.constructor, 
+            this.constructor,
             normalizeProps(
                 this.props,
-                this.context, 
+                this.context,
                 {instance: this}
             )
         );
@@ -242,7 +250,7 @@ class IntactReact extends Intact {
             }
         }
         return React.createElement('i', {
-            ref: this.__ref 
+            ref: this.__ref
         });
     }
 
@@ -275,11 +283,11 @@ class IntactReact extends Intact {
                 this._triggerMountedQueue();
             });
         }
-        this._shouldTrigger = this._triggerFlagStack.pop(); 
+        this._shouldTrigger = this._triggerFlagStack.pop();
     }
 }
 
-// for workInProgress.tag detection 
+// for workInProgress.tag detection
 IntactReact.prototype.isReactComponent = {};
 // for getting _context in Intact
 IntactReact.contextTypes = {

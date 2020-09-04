@@ -655,7 +655,7 @@ var IntactReact = function (_Intact) {
     function IntactReact(props, context) {
         classCallCheck(this, IntactReact);
 
-        // React will pass context to constructor 
+        // React will pass context to constructor
         if (context) {
             var parentRef = {};
             var normalizedProps = normalizeProps(props, context, parentRef);
@@ -671,7 +671,7 @@ var IntactReact = function (_Intact) {
             _this.vNode = h(_this.constructor, normalizedProps);
             _this.vNode.children = _this;
 
-            // We must keep the props to be undefined, 
+            // We must keep the props to be undefined,
             // otherwise React will think it has mutated
             _this._props = _this.props;
             delete _this.props;
@@ -697,6 +697,14 @@ var IntactReact = function (_Intact) {
             configurable: true,
             enumerable: true
         });
+
+        // sometimes the dom may be destroyed
+        // we should not call _update in this case
+        var _update = _this._update;
+        _this._update = function (lastVNode, nextVNode) {
+            if (_this.destroyed) return;
+            _update.call(_this, lastVNode, nextVNode);
+        };
         return possibleConstructorReturn(_this);
     }
 
@@ -930,7 +938,7 @@ var IntactReact = function (_Intact) {
     return IntactReact;
 }(Intact);
 
-// for workInProgress.tag detection 
+// for workInProgress.tag detection
 
 
 IntactReact.functionalWrapper = functionalWrapper;
