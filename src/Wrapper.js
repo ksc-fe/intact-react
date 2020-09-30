@@ -12,7 +12,7 @@ export default class Wrapper {
     init(lastVNode, nextVNode) {
         // let the component destroy by itself
         this.destroyed = true;
-        // react can use comment node as parent so long as its text like bellow
+        // react can use comment node as parent so long as its text likes bellow
         const placeholder = this.placeholder = document.createComment(commentNodeValue);
 
         // we should append the placholder advanced,

@@ -1354,4 +1354,40 @@ describe('Unit test', function() {
             </Context.Provider>
         );
     });
+
+    it('should update children when provider\'s children don\'t change and are wrapped by Intact component', () => {
+        const Context = React.createContext();
+        class Parent extends Component {
+            state = {
+                value: 'a'
+            };
+            click() {
+                this.setState({value: 'b'});
+            }
+            render() {
+                return <Context.Provider value={this.state.value}>
+                    {this.props.children}
+                </Context.Provider>
+            }
+        }
+        function Child() {
+            return (
+                <Context.Consumer>
+                    {value => {
+                        return <div>{value}</div>
+                    }}
+                </Context.Consumer>
+            );
+        }
+
+        let instance;
+        render(
+            <Parent ref={i => instance = i}>
+                <ChildrenIntactComponent>
+                    <Child />
+                </ChildrenIntactComponent>
+            </Parent>
+        );
+        instance.click();
+    });
 });

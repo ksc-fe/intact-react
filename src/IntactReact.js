@@ -66,14 +66,11 @@ class IntactReact extends Intact {
             configurable: true,
             enumerable: true,
         });
+    }
 
-        // sometimes the dom may be destroyed
-        // we should not call _update in this case
-        const _update = this._update;
-        this._update = (lastVNode, nextVNode) => {
-            if (this.destroyed) return;
-            _update.call(this, lastVNode, nextVNode);
-        };
+    _update(lastVNode, nextVNode) {
+        if (this.destroyed) return;
+        super._update(lastVNode, nextVNode);
     }
 
     getChildContext() {
