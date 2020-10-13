@@ -129,6 +129,28 @@ describe('Unit test', function() {
             expect(container.innerHTML).to.eql('<div><div>1</div><div>2</div><div>3</div></div>');
         });
 
+        it('render react component which return null', () => {
+            function Null() {
+                return null;
+            }
+            function NotNull() {
+                return <div>test</div>
+            }
+            render(
+                <ChildrenIntactComponent>
+                    <Null />
+                    <NotNull />
+                </ChildrenIntactComponent>
+            );
+            ReactDOM.render(
+                <ChildrenIntactComponent>
+                    <NotNull />
+                </ChildrenIntactComponent>,
+                container
+            );
+            expect(container.innerHTML).to.eql('<div><div>test</div></div>');
+        });
+
         describe('Normalize', () => {
             it('normalize events', () => {
                 const C = createIntactComponent(`<div ev-click={self.onClick}>click {self.get('on')}</div>`, {
@@ -366,10 +388,10 @@ describe('Unit test', function() {
                 render(<D ref={i => ref = i}/>);
 
                 ref.setState({show: false});
-                // expect(container.innerHTML).to.eql('<div><div>b</div></div>');
+                expect(container.innerHTML).to.eql('<div><div>b</div></div>');
 
-                // ref.setState({show: true});
-                // expect(container.innerHTML).to.eql('<div><div>a</div></div>');
+                ref.setState({show: true});
+                expect(container.innerHTML).to.eql('<div><div>a</div></div>');
             });
         });
 

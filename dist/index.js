@@ -393,10 +393,14 @@ var Wrapper = function () {
                     // maybe this element is wrapped by Provider
                     // and we can not get the instance
                     // but the real element is inserted before the placeholder by React
-                    dom = placeholder.previousSibling;
+                    // dom = placeholder.previousSibling;
+                    // @modify: look up child to get dom
+                    dom = getDomFromFiber(placeholder._reactRootContainer._internalRoot.current);
                 }
                 placeholder._realElement = dom;
-                dom._placeholder = placeholder;
+                if (dom) {
+                    dom._placeholder = placeholder;
+                }
                 resolve();
             });
         });
@@ -477,6 +481,16 @@ function clearDom(dom) {
     } else if (tmp = dom._placeholder) {
         delete dom._placeholder;
         delete tmp._realElement;
+    }
+}
+
+function getDomFromFiber(fiber) {
+    if (!fiber) return null;
+    switch (fiber.tag) {
+        case 5 /* HostComponent */:
+            return fiber.stateNode;
+        default:
+            return getDomFromFiber(fiber.child);
     }
 }
 
@@ -697,25 +711,6 @@ var IntactReact = function (_Intact) {
             configurable: true,
             enumerable: true
         });
-
-        // let fiber;
-        // Object.defineProperty(this, '_reactInternalFiber', {
-        // get() {
-        // return fiber;
-        // },
-        // set(v) {
-        // let props;
-        // Object.defineProperty(v, 'memoizedProps', {
-        // get() {
-        // return {...props};
-        // },
-        // set(v) {
-        // props = v;
-        // }
-        // });
-        // fiber = v;
-        // },
-        // });
         return possibleConstructorReturn(_this);
     }
 
