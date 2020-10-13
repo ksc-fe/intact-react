@@ -298,7 +298,7 @@ var Wrapper = function () {
     Wrapper.prototype.init = function init(lastVNode, nextVNode) {
         // let the component destroy by itself
         this.destroyed = true;
-        // react can use comment node as parent so long as its text like bellow
+        // react can use comment node as parent so long as its text likes bellow
         var placeholder = this.placeholder = document.createComment(commentNodeValue);
 
         // we should append the placholder advanced,
@@ -700,15 +700,31 @@ var IntactReact = function (_Intact) {
             enumerable: true
         });
 
-        // sometimes the dom may be destroyed
-        // we should not call _update in this case
-        var _update = _this._update;
-        _this._update = function (lastVNode, nextVNode) {
-            if (_this.destroyed) return;
-            _update.call(_this, lastVNode, nextVNode);
-        };
+        // let fiber;
+        // Object.defineProperty(this, '_reactInternalFiber', {
+        // get() {
+        // return fiber;
+        // },
+        // set(v) {
+        // let props;
+        // Object.defineProperty(v, 'memoizedProps', {
+        // get() {
+        // return {...props};
+        // },
+        // set(v) {
+        // props = v;
+        // }
+        // });
+        // fiber = v;
+        // },
+        // });
         return possibleConstructorReturn(_this);
     }
+
+    IntactReact.prototype._update = function _update(lastVNode, nextVNode) {
+        if (this.destroyed) return;
+        _Intact.prototype._update.call(this, lastVNode, nextVNode);
+    };
 
     IntactReact.prototype.getChildContext = function getChildContext() {
         return {
@@ -890,10 +906,33 @@ var IntactReact = function (_Intact) {
         this.__providers = new Map();
         var returnFiber = this._reactInternalFiber;
         while (returnFiber = returnFiber.return) {
-            // is ContextProvider
-            if (returnFiber.tag === 10) {
+            var tag = returnFiber.tag;
+            if (tag === 10) {
+                // is ContextProvider
                 var type = returnFiber.type;
                 this.__providers.set(type, type._context._currentValue);
+            } else if (tag === 3) {
+                // HostRoot
+                // always let hasContextChanged return true to make React update the component,
+                // even if it props has not changed
+                // see unit test: `shuold update children when provider's children...`
+                // issue: https://github.com/ksc-fe/kpc/issues/533
+                var stateNode = returnFiber.stateNode;
+                if (!stateNode.__intactReactDefinedProperty) {
+                    (function () {
+                        var context = void 0;
+                        Object.defineProperty(stateNode, 'pendingContext', {
+                            get: function get$$1() {
+                                return context || (returnFiber.context ? _extends({}, returnFiber.context) : Object.create(null));
+                            },
+                            set: function set$$1(v) {
+                                context = v;
+                            }
+                        });
+                        stateNode.__intactReactDefinedProperty = true;
+                    })();
+                }
+                break;
             }
         }
         return React.createElement('i', {

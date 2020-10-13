@@ -1357,6 +1357,7 @@ describe('Unit test', function() {
 
     it('should update children when provider\'s children don\'t change and are wrapped by Intact component', () => {
         const Context = React.createContext();
+        const ChildContext = React.createContext();
         class Parent extends Component {
             state = {
                 value: 'a'
@@ -1366,7 +1367,9 @@ describe('Unit test', function() {
             }
             render() {
                 return <Context.Provider value={this.state.value}>
-                    {this.props.children}
+                    <ChildContext.Provider>
+                        {this.props.children}
+                    </ChildContext.Provider>
                 </Context.Provider>
             }
         }

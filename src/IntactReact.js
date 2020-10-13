@@ -67,28 +67,24 @@ class IntactReact extends Intact {
             enumerable: true,
         });
 
-        let fiber;
-        Object.defineProperty(this, '_reactInternalFiber', {
-            get() {
-                return fiber;
-            },
-            set(v) {
-                let props;
-                // always return new props, to let React update the component,
-                // even if it props has not changed
-                // see unit test: `shuold update children when provider's children...`
-                // issue: https://github.com/ksc-fe/kpc/issues/533
-                Object.defineProperty(v, 'memoizedProps', {
-                    get() {
-                        return {...props};
-                    },
-                    set(v) {
-                        props = v;
-                    }
-                });
-                fiber = v;
-            },
-        });
+        // let fiber;
+        // Object.defineProperty(this, '_reactInternalFiber', {
+            // get() {
+                // return fiber;
+            // },
+            // set(v) {
+                // let props;
+                // Object.defineProperty(v, 'memoizedProps', {
+                    // get() {
+                        // return {...props};
+                    // },
+                    // set(v) {
+                        // props = v;
+                    // }
+                // });
+                // fiber = v;
+            // },
+        // });
     }
 
     _update(lastVNode, nextVNode) {
@@ -263,10 +259,29 @@ class IntactReact extends Intact {
         this.__providers = new Map();
         let returnFiber = this._reactInternalFiber;
         while (returnFiber = returnFiber.return) {
-            // is ContextProvider
-            if (returnFiber.tag === 10) {
+            const tag = returnFiber.tag;
+            if (tag === 10) { // is ContextProvider
                 const type = returnFiber.type;
                 this.__providers.set(type, type._context._currentValue);
+            } else if (tag === 3) { // HostRoot
+                // always let hasContextChanged return true to make React update the component,
+                // even if it props has not changed
+                // see unit test: `shuold update children when provider's children...`
+                // issue: https://github.com/ksc-fe/kpc/issues/533
+                const stateNode = returnFiber.stateNode;
+                if (!stateNode.__intactReactDefinedProperty) {
+                    let context;
+                    Object.defineProperty(stateNode, 'pendingContext', {
+                        get() {
+                            return context || (returnFiber.context ? {...returnFiber.context} : Object.create(null));
+                        },
+                        set(v) {
+                            context = v;
+                        }
+                    });
+                    stateNode.__intactReactDefinedProperty = true;
+                }
+                break;
             }
         }
         return React.createElement('i', {
