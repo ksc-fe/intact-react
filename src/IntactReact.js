@@ -66,25 +66,6 @@ class IntactReact extends Intact {
             configurable: true,
             enumerable: true,
         });
-
-        // let fiber;
-        // Object.defineProperty(this, '_reactInternalFiber', {
-            // get() {
-                // return fiber;
-            // },
-            // set(v) {
-                // let props;
-                // Object.defineProperty(v, 'memoizedProps', {
-                    // get() {
-                        // return {...props};
-                    // },
-                    // set(v) {
-                        // props = v;
-                    // }
-                // });
-                // fiber = v;
-            // },
-        // });
     }
 
     _update(lastVNode, nextVNode) {
