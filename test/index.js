@@ -1389,5 +1389,7 @@ describe('Unit test', function() {
             </Parent>
         );
         instance.click();
+
+        expect(container.innerHTML).to.eq('<div><div>b</div></div>');
     });
 });

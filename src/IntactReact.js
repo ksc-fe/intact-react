@@ -66,6 +66,29 @@ class IntactReact extends Intact {
             configurable: true,
             enumerable: true,
         });
+
+        let fiber;
+        Object.defineProperty(this, '_reactInternalFiber', {
+            get() {
+                return fiber;
+            },
+            set(v) {
+                let props;
+                // always return new props, to let React update the component,
+                // even if it props has not changed
+                // see unit test: `shuold update children when provider's children...`
+                // issue: https://github.com/ksc-fe/kpc/issues/533
+                Object.defineProperty(v, 'memoizedProps', {
+                    get() {
+                        return {...props};
+                    },
+                    set(v) {
+                        props = v;
+                    }
+                });
+                fiber = v;
+            },
+        });
     }
 
     _update(lastVNode, nextVNode) {
