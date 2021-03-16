@@ -116,8 +116,10 @@ export default class Wrapper {
                         // @modify: look up child to get dom
                         dom = getDomFromFiber(placeholder._reactRootContainer._internalRoot.current);
                     }
-                    placeholder._realElement = dom;
                     if (dom) {
+                        // maybe dom is <i></i>, then get its _realElement
+                        if (dom._realElement) dom = dom._realElement;
+                        placeholder._realElement = dom;
                         dom._placeholder = placeholder;
                     }
                     resolve();

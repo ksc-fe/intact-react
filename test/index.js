@@ -730,6 +730,20 @@ describe('Unit test', function() {
             ReactDOM.unmountComponentAtNode(container);
             expect(container.innerHTML).to.eql('');
         });
+
+        it('should unmount react component which return intact component and the intact component nests a react component which return a intact component', () => {
+            const ReactComponent = function() {
+                return <ChildrenIntactComponent>test</ChildrenIntactComponent>
+            }
+            const instance = renderApp(function() {
+                return <ChildrenIntactComponent>
+                    <ReactComponent />
+                </ChildrenIntactComponent>
+            });
+
+            ReactDOM.unmountComponentAtNode(container);
+            expect(container.innerHTML).to.eql('');
+        });
     });
 
     it('validate props in intact instead of react', () => {
