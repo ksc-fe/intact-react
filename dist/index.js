@@ -513,7 +513,7 @@ function normalize(vNode, parentRef) {
     // if a element has one child which is string or number
     // intact will set text content directly to update its children
     // this will lead to that the parent of placholder wich return
-    // by Wrapper missing because of it has been removed, 
+    // by Wrapper missing because of it has been removed,
     // so we should convert string or number child
     // to VNode to let intact update it one by one
     if (isStringOrNumber(vNode)) {
@@ -642,7 +642,7 @@ function getEventName(propName) {
             return 'ev-$' + propName.substring(3).replace(/\-/g, ':');
         } else if ((tmp = third.charCodeAt(0)) && tmp >= 65 && tmp <= 90) {
             // e.g. onClick
-            return 'ev-' + propName.substring(2).toLowerCase().replace(/\-/g, ':');
+            return 'ev-' + (propName.charAt(2).toLowerCase() + propName.substring(3).replace(/\-/g, ':'));
         }
     }
 }
