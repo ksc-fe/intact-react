@@ -12,7 +12,7 @@ const {h, config} = Intact.Vdt.miss;
 
 // delegate to window
 if (config) {
-    config.delegateTarget = typeof window !== 'undefined' ? window : this;
+    config.delegateTarget = typeof window !== 'undefined' ? window : undefined;
 }
 
 let internalInstanceKey;

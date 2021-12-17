@@ -655,10 +655,10 @@ var _Intact$Vdt$miss = Intact.Vdt.miss;
 var h = _Intact$Vdt$miss.h;
 var config = _Intact$Vdt$miss.config;
 
-// disable delegate events
+// delegate to window
 
 if (config) {
-    config.disableDelegate = true;
+    config.delegateTarget = typeof window !== 'undefined' ? window : undefined;
 }
 
 var internalInstanceKey = void 0;
