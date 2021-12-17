@@ -10,9 +10,9 @@ import {rewriteParentElementApi} from './Wrapper';
 const {isObject, extend} = Intact.utils;
 const {h, config} = Intact.Vdt.miss;
 
-// disable delegate events
+// delegate to window
 if (config) {
-    config.disableDelegate = true;
+    config.delegateTarget = typeof window !== 'undefined' ? window : this;
 }
 
 let internalInstanceKey;

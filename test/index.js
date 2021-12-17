@@ -119,6 +119,28 @@ describe('Unit test', function() {
             expect(click.callCount).to.eql(1);
         });
 
+        it('render react event and it can stop propagation', () => {
+            const click1 = sinon.spy((event) => {
+                console.log('click in react');
+                event.stopPropagation();
+            });
+            const click2 = sinon.spy(() => {
+                console.log('click in intact');
+            });
+            const Test = createIntactComponent(`<div ev-click={self.click}>{self.get('children')}</div>`, {
+                click: click2
+            });
+            render(
+                <Test>
+                    <div onClick={click1}>click</div>
+                </Test>
+            );
+
+            container.firstChild.firstChild.click();
+            expect(click1.callCount).to.eql(1);
+            expect(click2.callCount).to.eql(0);
+        });
+
         it('render nested array children', () => {
             render(
                 <ChildrenIntactComponent>
