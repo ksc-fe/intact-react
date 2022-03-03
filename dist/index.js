@@ -844,10 +844,10 @@ var IntactReact = function (_Intact) {
         // add parentVNode
         this.parentVNode = this.vNode.parentVNode = this.context.__parent && this.context.__parent.vNode;
 
-        var dom = this.init(null, this.vNode);
         var placeholder = this._placeholder;
         var parentElement = placeholder.parentElement;
         this.parentDom = parentElement;
+        var dom = this.init(null, this.vNode);
 
         // for unmountComponentAtNode
         dom[internalInstanceKey] = placeholder[internalInstanceKey];
