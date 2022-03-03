@@ -176,10 +176,10 @@ class IntactReact extends Intact {
         // add parentVNode
         this.parentVNode = this.vNode.parentVNode = this.context.__parent && this.context.__parent.vNode;
 
-        const dom = this.init(null, this.vNode);
         const placeholder = this._placeholder;
         const parentElement = placeholder.parentElement;
         this.parentDom = parentElement;
+        const dom = this.init(null, this.vNode);
 
         // for unmountComponentAtNode
         dom[internalInstanceKey] = placeholder[internalInstanceKey];
